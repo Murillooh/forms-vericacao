@@ -242,26 +242,21 @@ function processarCadastro(dados) {
       ];
       
       sheet.appendRow(cabecalhos);
-      
-      // Formata a linha de cabeçalho para ficar elegante
-      var range = sheet.getRange(1, 1, 1, cabecalhos.length);
-      range.setFontWeight("bold");
-      range.setBackground("#c9a449"); // Gold corporativo do tema
-      range.setFontColor("#1a1407"); // Contraste escuro
-      range.setHorizontalAlignment("center");
-      
       sheet.setFrozenRows(1);
     } else {
       // Se a aba existe mas não tem a coluna de PDF, adiciona a coluna
       if (sheet.getLastColumn() === 9) {
         var range = sheet.getRange(1, 10);
         range.setValue("Link do PDF de Recibo");
-        range.setFontWeight("bold");
-        range.setBackground("#c9a449");
-        range.setFontColor("#1a1407");
-        range.setHorizontalAlignment("center");
       }
     }
+
+    // Aplica a formatação do cabeçalho (Fundo Azul e Letras Douradas)
+    var cabecalhoRange = sheet.getRange(1, 1, 1, sheet.getLastColumn());
+    cabecalhoRange.setFontWeight("bold");
+    cabecalhoRange.setBackground("#0f4c81"); // Azul Corporativo (Classic Blue)
+    cabecalhoRange.setFontColor("#dfb247"); // Letras Douradas
+    cabecalhoRange.setHorizontalAlignment("center");
     
     // Validações de segurança no lado do servidor
     if (!dados.nome || !dados.nome.trim() ||
@@ -317,6 +312,21 @@ function processarCadastro(dados) {
       imeiLimpo,
       pdfUrl
     ]);
+    
+    // Aplica a formatação das linhas de dados (Fundo Preto e Letras Douradas)
+    if (sheet.getLastRow() > 1) {
+      var dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
+      dataRange.setBackground("#111111"); // Fundo Preto (Suave/Elegante)
+      dataRange.setFontColor("#ffd97d"); // Letras Douradas Brilhantes
+      dataRange.setHorizontalAlignment("left");
+      
+      // Centraliza coluna de Data/Hora e link do PDF
+      var dataHoraRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1);
+      dataHoraRange.setHorizontalAlignment("center");
+      
+      var linkPdfRange = sheet.getRange(2, 10, sheet.getLastRow() - 1, 1);
+      linkPdfRange.setHorizontalAlignment("center");
+    }
     
     // Auto-ajusta as colunas após inserção para legibilidade
     try {
