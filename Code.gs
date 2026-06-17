@@ -207,7 +207,7 @@ function gerarPDF(dados) {
         
         "<div class='section-title'>Celular Atribuído</div>" +
         "<div class='info-grid'>" +
-          "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCellular + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCelular + "</div></div>" +
           "<div class='info-row'><div class='info-label'>IMEI do Celular:</div><div class='info-value'>" + dados.imeiCelular + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Acompanha Carregador?</div><div class='info-value'>" + (dados.celularCarregador || "Sim") + "</div></div>" +
         "</div>" +
