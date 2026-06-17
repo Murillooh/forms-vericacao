@@ -324,7 +324,6 @@ function processarCadastro(dados) {
         "Carregador Celular",
         "Acessórios",
         "Itens em Falta / Observações",
-        "Foto de Validação",
         "Link do PDF de Recibo"
       ];
       
@@ -389,18 +388,7 @@ function processarCadastro(dados) {
         }
       }
       
-      // Recarrega headers e confere a coluna "Foto de Validação"
-      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-      if (headers.indexOf("Foto de Validação") === -1) {
-        var idxPdf = headers.indexOf("Link do PDF de Recibo");
-        if (idxPdf !== -1) {
-          sheet.insertColumnBefore(idxPdf + 1);
-          sheet.getRange(1, idxPdf + 1).setValue("Foto de Validação");
-        } else {
-          sheet.insertColumnBefore(sheet.getLastColumn());
-          sheet.getRange(1, sheet.getLastColumn() - 1).setValue("Foto de Validação");
-        }
-      }
+
       
       // Garante que tem a coluna de Recibo PDF no final
       headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -487,32 +475,7 @@ function processarCadastro(dados) {
       }
     }
     
-    // Salva a foto de validação no Google Drive se houver
-    var fotoUrl = "";
-    if (dados.foto && dados.foto.indexOf("base64,") !== -1) {
-      try {
-        var base64Parts = dados.foto.split("base64,");
-        var mimeType = base64Parts[0].split(":")[1].split(";")[0];
-        var decodedData = Utilities.base64Decode(base64Parts[1]);
-        var fotoBlob = Utilities.newBlob(decodedData, mimeType, "Foto_Validacao_" + dados.nome.replace(/\s+/g, "_") + "_" + new Date().getTime() + ".jpg");
-        
-        var folder = obterOuCriarPasta();
-        var fotoFile = folder.createFile(fotoBlob);
-        
-        try {
-          fotoFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        } catch (eShare) {
-          try {
-            fotoFile.setSharing(DriveApp.Access.DOMAIN, DriveApp.Permission.VIEW);
-          } catch (eDomain) {
-            Logger.log("Aviso: Falha ao definir permissão de compartilhamento da foto. Detalhes: " + eDomain.toString());
-          }
-        }
-        fotoUrl = fotoFile.getUrl();
-      } catch (eFoto) {
-        Logger.log("Erro ao salvar foto no Drive: " + eFoto.toString());
-      }
-    }
+
 
     // Gera o recibo PDF e obtém o link do arquivo
     var pdfUrl = "";
@@ -578,9 +541,7 @@ function processarCadastro(dados) {
         case "Itens em Falta / Observações":
           novaLinha.push(dados.itensFalta ? dados.itensFalta.trim() : "");
           break;
-        case "Foto de Validação":
-          novaLinha.push(fotoUrl);
-          break;
+
         case "Link do PDF de Recibo":
           novaLinha.push(pdfUrl);
           break;
@@ -623,7 +584,7 @@ function processarCadastro(dados) {
       // Centraliza colunas específicas para alinhamento profissional
       for (var colIdx = 0; colIdx < headersFinais.length; colIdx++) {
         var hName = headersFinais[colIdx];
-        if (hName === "Data/Hora de Registro" || hName === "CPF" || hName === "Link do PDF de Recibo" || hName === "IMEI do Celular" || hName === "Foto de Validação") {
+        if (hName === "Data/Hora de Registro" || hName === "CPF" || hName === "Link do PDF de Recibo" || hName === "IMEI do Celular") {
           sheet.getRange(2, colIdx + 1, sheet.getLastRow() - 1, 1).setHorizontalAlignment("center");
         }
       }
