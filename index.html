@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cadastro de Periféricos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Caveat:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Playball&family=Sacramento&family=Parisienne&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #09090b;
@@ -569,6 +569,10 @@
         padding-left: env(safe-area-inset-left, 8px);
         padding-right: env(safe-area-inset-right, 8px);
       }
+      body::before {
+        animation: none !important;
+        transform: none !important;
+      }
       .container {
         padding: 4px;
         min-height: auto;
@@ -577,6 +581,12 @@
         flex-direction: column;
         min-height: auto;
         border-radius: 12px;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #08080c !important;
+      }
+      .shooting-star {
+        filter: none !important;
       }
       .sidebar {
         width: 100%;
@@ -742,17 +752,18 @@
       border-radius: 50%;
       animation: twinkle var(--duration, 3s) infinite ease-in-out;
       opacity: 0.15;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
     }
     
     @keyframes twinkle {
       0%, 100% {
         opacity: 0.15;
-        transform: scale(0.8);
+        transform: scale(0.8) translate3d(0, 0, 0);
       }
       50% {
         opacity: 0.95;
-        transform: scale(1.3);
-        box-shadow: 0 0 6px currentColor;
+        transform: scale(1.3) translate3d(0, 0, 0);
       }
     }
 
@@ -767,6 +778,8 @@
       pointer-events: none;
       transform-origin: left center;
       animation: shoot var(--duration, 1.5s) linear forwards;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
     }
     
     @keyframes shoot {
@@ -1086,10 +1099,13 @@
           <div class="review-section">
             <div class="review-section-header">
               <span>Assinatura Digital do Termo</span>
-              <button type="button" class="btn-edit-link" id="btnClearSignature">Limpar</button>
+              <div style="display: flex; gap: 12px;">
+                <button type="button" class="btn-edit-link" id="btnGerarAssinatura">Gerar Assinatura</button>
+                <button type="button" class="btn-edit-link" id="btnClearSignature">Limpar</button>
+              </div>
             </div>
             <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 8px;">
-              Assine com o mouse ou o dedo dentro da caixa neon abaixo:
+              Assine com o mouse ou o dedo dentro da caixa neon abaixo, ou gere uma automaticamente:
             </p>
             <div class="signature-container">
               <canvas id="signaturePad" width="500" height="150"></canvas>
@@ -1326,6 +1342,89 @@
     canvas.addEventListener('pointerout', stopDrawing);
 
     document.getElementById('btnClearSignature').addEventListener('click', clearSignature);
+
+    let currentFontIndex = 0;
+    const signatureFonts = [
+      '36px "Great Vibes", cursive',
+      '32px "Playball", cursive',
+      '38px "Sacramento", cursive',
+      '30px "Dancing Script", cursive',
+      '32px "Parisienne", cursive',
+      '38px "Caveat", cursive'
+    ];
+
+    document.getElementById('btnGerarAssinatura').addEventListener('click', gerarAssinaturaAleatoria);
+
+    function gerarAssinaturaAleatoria() {
+      const nomeInput = document.getElementById('nome');
+      const nomeCompleto = nomeInput ? nomeInput.value.trim() : '';
+
+      if (!nomeCompleto) {
+        mostrarMensagem('Preencha seu nome completo na Etapa 1 para poder gerar a assinatura.', 'erro');
+        voltarParaEtapa1(true);
+        if (nomeInput) nomeInput.focus();
+        return;
+      }
+
+      limparMensagem();
+      clearSignature();
+
+      const fontSpec = signatureFonts[currentFontIndex];
+      currentFontIndex = (currentFontIndex + 1) % signatureFonts.length;
+
+      ctx.save();
+      
+      // Centralizar texto
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      ctx.fillStyle = '#ffd97d';
+      ctx.strokeStyle = '#ffd97d';
+      
+      // Leve inclinação natural (entre -2 e +2 graus)
+      const angulo = (Math.random() * 4 - 2) * Math.PI / 180;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(angulo);
+
+      ctx.font = fontSpec;
+
+      // Medir e ajustar se for muito grande
+      let textWidth = ctx.measureText(nomeCompleto).width;
+      let fontSizeMatch = fontSpec.match(/^(\d+)px/);
+      let fontSize = fontSizeMatch ? parseInt(fontSizeMatch[1]) : 30;
+
+      if (textWidth > canvas.width - 40) {
+        const ratio = (canvas.width - 40) / textWidth;
+        const novaFont = fontSpec.replace(/^\d+px/, `${Math.floor(fontSize * ratio)}px`);
+        ctx.font = novaFont;
+        textWidth = canvas.width - 40;
+      }
+
+      // Escrever o nome completo (sobe um pouco para dar espaço ao traço)
+      ctx.fillText(nomeCompleto, 0, -10);
+
+      // Desenhar risco caligráfico fluido (floreio)
+      ctx.beginPath();
+      ctx.lineWidth = 2 + Math.random() * 0.8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const startX = - (textWidth / 2) - 10;
+      const startY = 12;
+      const endX = (textWidth / 2) + 15;
+      const endY = 8 + (Math.random() * 8 - 4); // Leve variação vertical no final
+
+      ctx.moveTo(startX, startY);
+
+      // Traço curvado aleatório
+      const controlX = startX + (endX - startX) * (0.3 + Math.random() * 0.4);
+      const controlY = startY + 12 + Math.random() * 8;
+
+      ctx.quadraticCurveTo(controlX, controlY, endX, endY);
+      ctx.stroke();
+
+      ctx.restore();
+    }
 
     function startDrawing(e) {
       drawing = true;
