@@ -148,6 +148,14 @@ function gerarPDF(dados) {
     }
   }
 
+  var itensFaltaHtml = "";
+  if (dados.itensFalta && dados.itensFalta.trim() !== "") {
+    itensFaltaHtml = "<div class='section-title'>Itens em Falta / Observações</div>" +
+                     "<div style='font-size: 13px; color: #2d3748; background: #fffaf0; border: 1px solid #fbd38d; padding: 10px; border-radius: 6px; margin-bottom: 15px;'>" +
+                       dados.itensFalta.trim() +
+                     "</div>";
+  }
+
   var assinaturaHtml = "";
   if (dados.assinatura) {
     assinaturaHtml = "<div class='section-title'>Termo de Responsabilidade & Assinatura</div>" +
@@ -194,15 +202,19 @@ function gerarPDF(dados) {
         "<div class='info-grid'>" +
           "<div class='info-row'><div class='info-label'>Modelo do Notebook:</div><div class='info-value'>" + dados.modeloNotebook + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Número de Patrimônio:</div><div class='info-value'>" + dados.patrimonioNotebook + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Acompanha Carregador?</div><div class='info-value'>" + (dados.notebookCarregador || "Sim") + "</div></div>" +
         "</div>" +
         
         "<div class='section-title'>Celular Atribuído</div>" +
         "<div class='info-grid'>" +
-          "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCelular + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCellular + "</div></div>" +
           "<div class='info-row'><div class='info-label'>IMEI do Celular:</div><div class='info-value'>" + dados.imeiCelular + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Acompanha Carregador?</div><div class='info-value'>" + (dados.celularCarregador || "Sim") + "</div></div>" +
         "</div>" +
         
         acessoriosHtml +
+        
+        itensFaltaHtml +
         
         assinaturaHtml +
         
@@ -287,9 +299,12 @@ function processarCadastro(dados) {
         "Unidade", 
         "Modelo do Notebook", 
         "Patrimônio do Notebook", 
+        "Carregador Notebook",
         "Modelo do Celular", 
         "IMEI do Celular",
+        "Carregador Celular",
         "Acessórios",
+        "Itens em Falta / Observações",
         "Link do PDF de Recibo"
       ];
       
@@ -305,6 +320,32 @@ function processarCadastro(dados) {
         sheet.getRange(1, 3).setValue("CPF");
       }
       
+      // Recarrega headers e confere a coluna "Carregador Notebook"
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (headers.indexOf("Carregador Notebook") === -1) {
+        var idxPatr = headers.indexOf("Patrimônio do Notebook");
+        if (idxPatr !== -1) {
+          sheet.insertColumnAfter(idxPatr + 1);
+          sheet.getRange(1, idxPatr + 2).setValue("Carregador Notebook");
+        } else {
+          sheet.insertColumnBefore(sheet.getLastColumn());
+          sheet.getRange(1, sheet.getLastColumn() - 1).setValue("Carregador Notebook");
+        }
+      }
+      
+      // Recarrega headers e confere a coluna "Carregador Celular"
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (headers.indexOf("Carregador Celular") === -1) {
+        var idxImei = headers.indexOf("IMEI do Celular");
+        if (idxImei !== -1) {
+          sheet.insertColumnAfter(idxImei + 1);
+          sheet.getRange(1, idxImei + 2).setValue("Carregador Celular");
+        } else {
+          sheet.insertColumnBefore(sheet.getLastColumn());
+          sheet.getRange(1, sheet.getLastColumn() - 1).setValue("Carregador Celular");
+        }
+      }
+      
       // Recarrega headers e confere a coluna Acessórios
       headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       var hasAcessorios = headers.indexOf("Acessórios") !== -1;
@@ -313,6 +354,19 @@ function processarCadastro(dados) {
         var lastCol = sheet.getLastColumn();
         sheet.insertColumnBefore(lastCol);
         sheet.getRange(1, lastCol).setValue("Acessórios");
+      }
+      
+      // Recarrega headers e confere a coluna "Itens em Falta / Observações"
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (headers.indexOf("Itens em Falta / Observações") === -1) {
+        var idxLink = headers.indexOf("Link do PDF de Recibo");
+        if (idxLink !== -1) {
+          sheet.insertColumnBefore(idxLink + 1);
+          sheet.getRange(1, idxLink + 1).setValue("Itens em Falta / Observações");
+        } else {
+          sheet.insertColumnBefore(sheet.getLastColumn() + 1);
+          sheet.getRange(1, sheet.getLastColumn()).setValue("Itens em Falta / Observações");
+        }
       }
       
       // Garante que tem a coluna de Recibo PDF no final
@@ -442,11 +496,17 @@ function processarCadastro(dados) {
         case "Patrimônio do Notebook":
           novaLinha.push(dados.patrimonioNotebook.trim());
           break;
+        case "Carregador Notebook":
+          novaLinha.push(dados.notebookCarregador || "Sim");
+          break;
         case "Modelo do Celular":
           novaLinha.push(dados.modeloCelular);
           break;
         case "IMEI do Celular":
           novaLinha.push(imeiLimpo);
+          break;
+        case "Carregador Celular":
+          novaLinha.push(dados.celularCarregador || "Sim");
           break;
         case "Acessórios":
           var acessString = "";
@@ -454,6 +514,9 @@ function processarCadastro(dados) {
             acessString = Array.isArray(dados.acessorios) ? dados.acessorios.join(", ") : dados.acessorios.toString();
           }
           novaLinha.push(acessString);
+          break;
+        case "Itens em Falta / Observações":
+          novaLinha.push(dados.itensFalta ? dados.itensFalta.trim() : "");
           break;
         case "Link do PDF de Recibo":
           novaLinha.push(pdfUrl);

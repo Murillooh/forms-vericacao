@@ -895,6 +895,47 @@
         opacity: 0;
       }
     }
+    /* Segmented Control / Radio Pill Group */
+    .radio-pill-group {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+      width: 120px;
+    }
+    
+    .radio-pill {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .radio-pill input[type="radio"] {
+      display: none;
+    }
+    
+    .radio-pill span {
+      display: block;
+      width: 100%;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .radio-pill input[type="radio"]:checked + span {
+      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+      color: #0d0902;
+      box-shadow: 0 2px 8px rgba(223, 178, 71, 0.3);
+    }
   </style>
   <script>
     // Mock do google.script.run para desenvolvimento local
@@ -1055,6 +1096,20 @@
             </div>
           </div>
 
+          <div class="field" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 8px;">
+            <label style="font-size: 13.5px; font-weight: 500;">Acompanha carregador?</label>
+            <div class="radio-pill-group">
+              <label class="radio-pill">
+                <input type="radio" name="notebookCarregador" value="Sim" checked>
+                <span>Sim</span>
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="notebookCarregador" value="Não">
+                <span>Não</span>
+              </label>
+            </div>
+          </div>
+
           <div class="section-divider">
             <div class="icon-box">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a449" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
@@ -1075,6 +1130,20 @@
             <div class="field-help">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               Disque <strong style="color:var(--gold-bright)">*#06#</strong> na tela de discador do celular para o IMEI aparecer automaticamente na tela.
+            </div>
+          </div>
+
+          <div class="field" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 8px;">
+            <label style="font-size: 13.5px; font-weight: 500;">Acompanha carregador?</label>
+            <div class="radio-pill-group">
+              <label class="radio-pill">
+                <input type="radio" name="celularCarregador" value="Sim" checked>
+                <span>Sim</span>
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="celularCarregador" value="Não">
+                <span>Não</span>
+              </label>
             </div>
           </div>
 
@@ -1108,6 +1177,18 @@
                 <span class="accessory-label">Adaptador de Vídeo</span>
               </label>
             </div>
+          </div>
+
+          <div class="section-divider">
+            <div class="icon-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a449" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </div>
+            <span>Itens em Falta / Observações</span>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="itensFalta">Existe algum equipamento/acessório que você precisa para trabalhar?</label></div>
+            <input type="text" id="itensFalta" name="itensFalta" placeholder="Ex: Suporte de notebook, teclado numérico, etc. (deixe vazio se tiver tudo)">
           </div>
 
           <div class="btn-row">
@@ -1168,7 +1249,7 @@
                 <span class="review-value" id="revNotebook"></span>
               </div>
               <div class="review-item">
-                <span class="review-label">Patrimônio Notebook</span>
+                <span class="review-label">Patrimônio / Carregador</span>
                 <span class="review-value" id="revPatrimonio"></span>
               </div>
               <div class="review-item">
@@ -1176,7 +1257,7 @@
                 <span class="review-value" id="revCelular"></span>
               </div>
               <div class="review-item">
-                <span class="review-label">IMEI Celular</span>
+                <span class="review-label">IMEI / Carregador</span>
                 <span class="review-value" id="revImei"></span>
               </div>
             </div>
@@ -1435,15 +1516,19 @@
       limparMensagem();
 
       // Preenche os valores na tela de revisão
+      const nbCarregador = document.querySelector('input[name="notebookCarregador"]:checked').value;
+      const celCarregador = document.querySelector('input[name="celularCarregador"]:checked').value;
+      const itensFaltaVal = document.getElementById('itensFalta').value.trim();
+
       document.getElementById('revNome').textContent = document.getElementById('nome').value.trim();
       document.getElementById('revCpf').textContent = document.getElementById('cpf').value.trim();
       document.getElementById('revEmail').textContent = document.getElementById('email').value.trim();
       document.getElementById('revCargo').textContent = document.getElementById('cargo').value.trim();
       document.getElementById('revUnidade').textContent = document.getElementById('unidade').value.trim();
       document.getElementById('revNotebook').textContent = modeloNotebook;
-      document.getElementById('revPatrimonio').textContent = patrimonioNotebook;
+      document.getElementById('revPatrimonio').textContent = patrimonioNotebook + ' (' + (nbCarregador === 'Sim' ? 'Com carregador' : 'Sem carregador') + ')';
       document.getElementById('revCelular').textContent = modeloCelular;
-      document.getElementById('revImei').textContent = imeiCelular;
+      document.getElementById('revImei').textContent = imeiCelular + ' (' + (celCarregador === 'Sim' ? 'Com carregador' : 'Sem carregador') + ')';
 
       // Popula acessórios selecionados na tela de revisão
       const checkboxes = document.querySelectorAll('input[name="acessorios"]:checked');
@@ -1451,7 +1536,7 @@
       const reviewAcessoriosSection = document.getElementById('reviewAcessoriosSection');
       
       acessoriosContainer.innerHTML = '';
-      if (checkboxes.length > 0) {
+      if (checkboxes.length > 0 || itensFaltaVal !== '') {
         reviewAcessoriosSection.style.display = 'block';
         checkboxes.forEach(function(cb) {
           const item = document.createElement('div');
@@ -1459,6 +1544,14 @@
           item.innerHTML = '<span class="review-label">Acessório Extra</span><span class="review-value">• ' + cb.value + '</span>';
           acessoriosContainer.appendChild(item);
         });
+
+        if (itensFaltaVal !== '') {
+          const item = document.createElement('div');
+          item.className = 'review-item';
+          item.style.gridColumn = '1 / -1';
+          item.innerHTML = '<span class="review-label">Itens em falta / Observações</span><span class="review-value" style="color: var(--gold-bright);">' + itensFaltaVal + '</span>';
+          acessoriosContainer.appendChild(item);
+        }
       } else {
         reviewAcessoriosSection.style.display = 'none';
       }
@@ -1719,9 +1812,12 @@
         unidade: document.getElementById('unidade').value.trim(),
         modeloNotebook: selectModeloNotebook.value,
         patrimonioNotebook: document.getElementById('patrimonioNotebook').value.trim(),
+        notebookCarregador: document.querySelector('input[name="notebookCarregador"]:checked').value,
         modeloCelular: selectModeloCelular.value,
         imeiCelular: imeiInput.value.trim(),
+        celularCarregador: document.querySelector('input[name="celularCarregador"]:checked').value,
         acessorios: acessoriosSelecionados,
+        itensFalta: document.getElementById('itensFalta').value.trim(),
         assinatura: canvas.toDataURL('image/png') // Converte a assinatura para base64
       };
 
