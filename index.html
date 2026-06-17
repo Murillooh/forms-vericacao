@@ -1432,28 +1432,8 @@
         textWidth = canvas.width - 40;
       }
 
-      // Escrever o nome completo (sobe um pouco para dar espaço ao traço)
-      ctx.fillText(nomeCompleto, 0, -10);
-
-      // Desenhar risco caligráfico fluido (floreio)
-      ctx.beginPath();
-      ctx.lineWidth = 2 + Math.random() * 0.8;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      const startX = - (textWidth / 2) - 10;
-      const startY = 12;
-      const endX = (textWidth / 2) + 15;
-      const endY = 8 + (Math.random() * 8 - 4); // Leve variação vertical no final
-
-      ctx.moveTo(startX, startY);
-
-      // Traço curvado aleatório
-      const controlX = startX + (endX - startX) * (0.3 + Math.random() * 0.4);
-      const controlY = startY + 12 + Math.random() * 8;
-
-      ctx.quadraticCurveTo(controlX, controlY, endX, endY);
-      ctx.stroke();
+      // Escrever o nome completo centralizado
+      ctx.fillText(nomeCompleto, 0, 0);
 
       ctx.restore();
     }
