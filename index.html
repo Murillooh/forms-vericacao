@@ -831,6 +831,7 @@
 
   <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/locgrupo.com.br/s/AKfycbxgT9_tpHyhfprb5oHcCoCNPKMncR3r4dKcBA7kT9_plJyZFJzohj5n_7R3CRDsNWK4w/exec";
+    const isExternal = window.location.hostname !== 'script.google.com' && !window.location.hostname.endsWith('.googleusercontent.com');
     const form = document.getElementById('formCadastro');
     const fase1 = document.getElementById('fase1');
     const fase2 = document.getElementById('fase2');
@@ -972,7 +973,7 @@
 
     function carregarOpcoes() {
       // Se estiver rodando dentro do Apps Script (como Web App direto)
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
+      if (!isExternal && typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(popularEquipamentos)
           .withFailureHandler(function (erro) {
@@ -1051,7 +1052,7 @@
       loadingText.style.display = 'flex';
 
       // Se estiver rodando dentro do Apps Script (como Web App direto)
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
+      if (!isExternal && typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(tratarSucessoEnvio)
           .withFailureHandler(tratarFalhaEnvio)
