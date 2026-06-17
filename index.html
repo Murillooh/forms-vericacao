@@ -1209,6 +1209,16 @@
                 <span class="checkbox-custom"></span>
                 <span class="accessory-label">Adaptador de Vídeo</span>
               </label>
+              <label class="accessory-card">
+                <input type="checkbox" name="acessorios" id="cbAcessorioOutro" value="Outros">
+                <span class="checkbox-custom"></span>
+                <span class="accessory-label">Outros</span>
+              </label>
+            </div>
+            
+            <div class="field" id="fieldAcessoriosOutroText" style="display: none; margin-top: 12px;">
+              <div class="field-label"><label for="acessoriosOutro">Quais outros acessórios você recebeu?</label></div>
+              <input type="text" id="acessoriosOutro" name="acessoriosOutro" placeholder="Ex: Mochila, Suporte de Notebook, Mousepad, etc.">
             </div>
           </div>
 
@@ -1593,7 +1603,14 @@
         checkboxes.forEach(function(cb) {
           const item = document.createElement('div');
           item.className = 'review-item';
-          item.innerHTML = '<span class="review-label">Acessório Extra</span><span class="review-value">• ' + cb.value + '</span>';
+          let displayVal = cb.value;
+          if (cb.value === "Outros") {
+            const outroText = document.getElementById('acessoriosOutro').value.trim();
+            if (outroText) {
+              displayVal = "Outros (" + outroText + ")";
+            }
+          }
+          item.innerHTML = '<span class="review-label">Acessório Extra</span><span class="review-value">• ' + displayVal + '</span>';
           acessoriosContainer.appendChild(item);
         });
 
@@ -1651,6 +1668,17 @@
     ];
 
     document.getElementById('btnGerarAssinatura').addEventListener('click', gerarAssinaturaAleatoria);
+
+    document.getElementById('cbAcessorioOutro').addEventListener('change', function() {
+      const fieldOutro = document.getElementById('fieldAcessoriosOutroText');
+      if (this.checked) {
+        fieldOutro.style.display = 'block';
+        document.getElementById('acessoriosOutro').focus();
+      } else {
+        fieldOutro.style.display = 'none';
+        document.getElementById('acessoriosOutro').value = '';
+      }
+    });
 
     function gerarAssinaturaAleatoria() {
       const nomeInput = document.getElementById('nome');
@@ -1863,7 +1891,16 @@
       // Coleta acessórios marcados
       const acessoriosSelecionados = [];
       document.querySelectorAll('input[name="acessorios"]:checked').forEach(function(cb) {
-        acessoriosSelecionados.push(cb.value);
+        if (cb.value === "Outros") {
+          const outroText = document.getElementById('acessoriosOutro').value.trim();
+          if (outroText) {
+            acessoriosSelecionados.push("Outros (" + outroText + ")");
+          } else {
+            acessoriosSelecionados.push("Outros");
+          }
+        } else {
+          acessoriosSelecionados.push(cb.value);
+        }
       });
 
       const dados = {
