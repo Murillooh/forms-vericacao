@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cadastro de Periféricos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --gold: #dfb247;
+      --gold-bright: #ffd97d;
+      --gold-dim: rgba(223, 178, 71, 0.1);
+      --text: #f3f1ec;
+      --text-muted: #a3a19c;
+      --text-faint: #6e6d6a;
+      --error: #e57369;
+      --error-bg: rgba(229, 115, 105, 0.08);
+      --success: #7bc080;
+      --success-bg: rgba(123, 192, 128, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #030305;
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.45;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -5%;
+      left: -5%;
+      width: 110%;
+      height: 110%;
+      background: #030305;
+      background-image: 
+        radial-gradient(circle 800px at var(--mouse-x, 25%) var(--mouse-y, 50%), rgba(223, 178, 71, 0.12), transparent 70%),
+        url('premium_nebula_bg.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      opacity: 0.95;
+      pointer-events: none;
+      animation: bgPan 50s infinite alternate ease-in-out;
+      transform-origin: center;
+    }
+
+    @keyframes bgPan {
+      0% {
+        transform: scale(1.0) translate(0, 0);
+      }
+      50% {
+        transform: scale(1.04) translate(0.5%, -0.5%);
+      }
+      100% {
+        transform: scale(1.02) translate(-0.5%, 0.5%);
+      }
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      width: 100%;
+      padding: 40px 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-layout {
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 580px;
+      background: rgba(18, 18, 24, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar {
+      width: 38%;
+      background: linear-gradient(135deg, rgba(223, 178, 71, 0.15) 0%, rgba(10, 10, 15, 0.9) 100%);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .main-form {
+      width: 62%;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .eyebrow {
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(223, 178, 71, 0.3);
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 28px;
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(223, 178, 71, 0.15));
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 13.5px;
+      margin-bottom: 24px;
+      line-height: 1.45;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: 33%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-bright), var(--gold));
+      background-size: 200% 100%;
+      border-radius: 3px;
+      transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 8px var(--gold-bright);
+      animation: progress-glow 2.5s infinite linear;
+    }
+
+    @keyframes progress-glow {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-faint);
+      margin-bottom: 24px;
+    }
+
+    .progress-meta strong {
+      color: var(--gold-bright);
+      font-weight: 600;
+    }
+
+    .fase-intro {
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .fase-intro h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 4px;
+      color: var(--gold-bright);
+      text-shadow: 0 0 8px rgba(223, 178, 71, 0.1);
+    }
+
+    .fase-intro p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    label {
+      font-size: 13.5px;
+      color: var(--text);
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .field:focus-within label {
+      color: var(--gold-bright);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    input::placeholder {
+      color: var(--text-faint);
+    }
+
+    input:hover:not(:focus), select:hover:not(:focus) {
+      border-color: rgba(223, 178, 71, 0.5);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--gold-bright);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 16px rgba(223, 178, 71, 0.15);
+    }
+
+    /* Fix autofill/autocomplete background in dark mode */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover, 
+    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 1000px #0a0a0c inset !important;
+      -webkit-text-fill-color: var(--text) !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    select {
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd97d'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      cursor: pointer;
+    }
+
+    select option {
+      background-color: #1a1a24;
+      color: var(--text);
+    }
+
+    .field-help {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.4;
+    }
+
+    .field-help svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 24px 0 16px;
+    }
+
+    .section-divider .icon-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(223, 178, 71, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid rgba(223, 178, 71, 0.2);
+    }
+
+    .section-divider span {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--gold-bright);
+      text-shadow: 0 0 8px rgba(223, 178, 71, 0.15);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      position: relative;
+      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+      color: #1a1407;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(223, 178, 71, 0.35);
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 30%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.28);
+      transform: rotate(30deg);
+      animation: shine 5s infinite ease-in-out;
+    }
+
+    @keyframes shine {
+      0% { left: -60%; }
+      15% { left: 160%; }
+      100% { left: 160%; }
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 28px rgba(223, 178, 71, 0.55);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0) scale(1);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      flex: 0.6;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .msg {
+      margin-top: 16px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      display: none;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+
+    .msg.erro {
+      background: var(--error-bg);
+      border: 1px solid rgba(229, 115, 105, 0.3);
+      color: #fca59d;
+      display: flex;
+    }
+
+    .msg.sucesso {
+      background: var(--success-bg);
+      border: 1px solid rgba(123, 192, 128, 0.3);
+      color: #bdf0c1;
+      display: flex;
+    }
+
+    .msg svg { flex-shrink: 0; margin-top: 1px; }
+
+    .loading-text {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(223, 178, 71, 0.25);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .fase { display: none; }
+    .fase.ativa { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer-note {
+      font-size: 11.5px;
+      color: var(--text-faint);
+      margin-top: 24px;
+    }
+
+    /* Estilos da Tela de Revisão */
+    .review-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .review-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--gold-bright);
+    }
+
+    .btn-edit-link {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--gold);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color 0.2s ease;
+      display: inline;
+      width: auto;
+      flex: none;
+    }
+
+    .btn-edit-link:hover {
+      color: var(--gold-bright);
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @media (min-width: 480px) {
+      .review-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+      }
+    }
+
+    .review-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .review-label {
+      font-size: 10.5px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .review-value {
+      font-size: 13.5px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    @media (max-width: 800px) {
+      body {
+        padding: 8px;
+      }
+      .container {
+        padding: 8px;
+        min-height: auto;
+      }
+      .card-layout {
+        flex-direction: column;
+        min-height: auto;
+        border-radius: 12px;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 24px 20px;
+        gap: 16px;
+      }
+      .main-form {
+        width: 100%;
+        padding: 28px 20px;
+      }
+      .eyebrow {
+        margin-bottom: 4px;
+      }
+      .subtitle {
+        margin-bottom: 16px;
+      }
+      .progress-meta {
+        margin-bottom: 0px;
+      }
+      .footer-note {
+        margin-top: 16px;
+      }
+    }
+  </style>
+  <script>
+    // Mock do google.script.run para desenvolvimento local
+    if (typeof google === 'undefined' || !google.script || !google.script.run) {
+      window.google = {
+        script: {
+          run: {
+            withSuccessHandler: function (successHandler) {
+              return {
+                withFailureHandler: function (failureHandler) {
+                  return {
+                    getOpcoesEquipamentos: function () {
+                      console.log("Mock: Buscando opções de equipamentos...");
+                      setTimeout(function () {
+                        successHandler({
+                          notebooks: [
+                            "Notebook Lenovo preto",
+                            "Notebook Lenovo Prata"
+                          ],
+                          celulares: [
+                            "Moto G24",
+                            "Poco C65",
+                            "Redmi 13C"
+                          ]
+                        });
+                      }, 500);
+                    },
+                    processarCadastro: function (dados) {
+                      console.log("Mock: Processando cadastro de periféricos...", dados);
+                      setTimeout(function () {
+                        // Simulação de sucesso local
+                        successHandler({
+                          sucesso: true,
+                          mensagem: "Cadastro simulado com sucesso localmente!"
+                        });
+                      }, 1000);
+                    }
+                  };
+                }
+              };
+            }
+          }
+        }
+      };
+    }
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="card-layout">
+      <!-- Painel Esquerdo: Identidade, Descrição, Progresso e Nota -->
+      <div class="sidebar">
+        <div>
+          <div class="eyebrow">TI · Inventário Corporativo</div>
+          <h1>Cadastro de Periféricos</h1>
+          <p class="subtitle">Use este formulário para registrar oficialmente o notebook e o celular que foram atribuídos a você pela empresa.</p>
+        </div>
+
+        <div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-meta">
+            <span id="progressText">Etapa <strong>1</strong> de 3</span>
+            <span id="progressStage">Dados pessoais</span>
+          </div>
+        </div>
+
+        <p class="footer-note">Seus dados são usados apenas para controle interno de ativos de TI.</p>
+      </div>
+
+      <!-- Painel Direito: Formulário Ativo -->
+      <div class="main-form">
+        <form id="formCadastro" novalidate>
+
+        <div class="fase ativa" id="fase1">
+          <div class="fase-intro">
+            <h2>Quem é você</h2>
+            <p>Esses dados identificam o responsável pelos equipamentos no nosso controle interno. Confira se correspondem ao que está no seu cadastro de RH.</p>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="nome">Nome completo</label></div>
+            <input type="text" id="nome" name="nome" required autocomplete="name" placeholder="Como está no seu documento" autofocus>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="email">E-mail corporativo</label></div>
+            <input type="email" id="email" name="email" required placeholder="nome@empresa.com.br" autocomplete="email">
+            <div class="field-help">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Use o e-mail oficial da empresa, não o pessoal — é por ele que entraremos em contato se algo precisar ser corrigido.
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="cargo">Cargo</label></div>
+            <input type="text" id="cargo" name="cargo" required placeholder="Ex: Analista de TI, Técnico de Campo">
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="unidade">Unidade</label></div>
+            <input type="text" id="unidade" name="unidade" required placeholder="Ex: Zona Sul, Limão, Canindé, Barueri">
+            <div class="field-help">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Informe a unidade onde você atua na maior parte da semana.
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-primary" id="btnAvancar">
+              Avançar
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="fase" id="fase2">
+          <div class="fase-intro">
+            <h2>Seus equipamentos</h2>
+            <p>Agora identifique exatamente qual notebook e qual celular a empresa te entregou. Essas informações evitam duplicidade e ajudam a TI a rastrear o equipamento em caso de manutenção, troca ou perda.</p>
+          </div>
+
+          <div class="section-divider">
+            <div class="icon-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a449" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M2 20h20"/></svg>
+            </div>
+            <span>Notebook</span>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="modeloNotebook">Modelo</label></div>
+            <select id="modeloNotebook" name="modeloNotebook" required>
+              <option value="">Selecione o modelo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="patrimonioNotebook">Número de patrimônio</label></div>
+            <input type="text" id="patrimonioNotebook" name="patrimonioNotebook" required placeholder="Ex: NB-00214">
+            <div class="field-help">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              É a etiqueta numerada colada na parte de baixo do notebook. Vire o aparelho e procure a etiqueta da empresa.
+            </div>
+          </div>
+
+          <div class="section-divider">
+            <div class="icon-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a449" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            </div>
+            <span>Celular</span>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="modeloCelular">Modelo</label></div>
+            <select id="modeloCelular" name="modeloCelular" required>
+              <option value="">Selecione o modelo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="field-label"><label for="imeiCelular">IMEI</label></div>
+            <input type="text" id="imeiCelular" name="imeiCelular" required inputmode="numeric" maxlength="15" placeholder="15 dígitos numéricos">
+            <div class="field-help">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Disque <strong style="color:var(--gold-bright)">*#06#</strong> na tela de discador do celular para o IMEI aparecer automaticamente na tela.
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" id="btnVoltar">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+              Voltar
+            </button>
+            <button type="button" class="btn-primary" id="btnAvancarRevisao">
+              Revisar dados
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="fase" id="fase3">
+          <div class="fase-intro">
+            <h2>Revisão dos Dados</h2>
+            <p>Confira todas as informações fornecidas antes de enviar para garantir que não haja erros de cadastro.</p>
+          </div>
+
+          <div class="review-section">
+            <div class="review-section-header">
+              <span>Dados Pessoais</span>
+              <button type="button" class="btn-edit-link" onclick="voltarParaEtapa1()">Editar</button>
+            </div>
+            <div class="review-grid">
+              <div class="review-item">
+                <span class="review-label">Nome Completo</span>
+                <span class="review-value" id="revNome"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">E-mail Corporativo</span>
+                <span class="review-value" id="revEmail"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Cargo</span>
+                <span class="review-value" id="revCargo"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Unidade</span>
+                <span class="review-value" id="revUnidade"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="review-section">
+            <div class="review-section-header">
+              <span>Equipamentos</span>
+              <button type="button" class="btn-edit-link" onclick="irParaEtapa2(true)">Editar</button>
+            </div>
+            <div class="review-grid">
+              <div class="review-item">
+                <span class="review-label">Modelo Notebook</span>
+                <span class="review-value" id="revNotebook"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Patrimônio Notebook</span>
+                <span class="review-value" id="revPatrimonio"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Modelo Celular</span>
+                <span class="review-value" id="revCelular"></span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">IMEI Celular</span>
+                <span class="review-value" id="revImei"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn-secondary" id="btnVoltarFase2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+              Voltar
+            </button>
+            <button type="submit" class="btn-primary" id="btnEnviar">
+              Confirmar cadastro
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </button>
+          </div>
+        </div>
+
+        </form>
+
+        <div class="loading-text" id="loadingText"><span class="spinner"></span>Enviando seus dados...</div>
+        <div class="msg" id="msgBox"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formCadastro');
+    const fase1 = document.getElementById('fase1');
+    const fase2 = document.getElementById('fase2');
+    const fase3 = document.getElementById('fase3');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const progressStage = document.getElementById('progressStage');
+
+    const btnAvancar = document.getElementById('btnAvancar');
+    const btnVoltar = document.getElementById('btnVoltar');
+    const btnAvancarRevisao = document.getElementById('btnAvancarRevisao');
+    const btnVoltarFase2 = document.getElementById('btnVoltarFase2');
+    const btnEnviar = document.getElementById('btnEnviar');
+
+    const msgBox = document.getElementById('msgBox');
+    const loadingText = document.getElementById('loadingText');
+
+    const selectModeloNotebook = document.getElementById('modeloNotebook');
+    const selectModeloCelular = document.getElementById('modeloCelular');
+    const imeiInput = document.getElementById('imeiCelular');
+
+    const ICON_ERRO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
+    const ICON_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>';
+
+    imeiInput.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 15);
+    });
+
+    function mostrarMensagem(texto, tipo) {
+      const icone = tipo === 'erro' ? ICON_ERRO : ICON_OK;
+      msgBox.innerHTML = icone + '<span>' + texto + '</span>';
+      msgBox.className = 'msg ' + tipo;
+    }
+
+    function limparMensagem() {
+      msgBox.className = 'msg';
+      msgBox.innerHTML = '';
+    }
+
+    function irParaEtapa2(skipValidation) {
+      if (skipValidation !== true) {
+        const nome = document.getElementById('nome').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const cargo = document.getElementById('cargo').value.trim();
+        const unidade = document.getElementById('unidade').value.trim();
+
+        if (!nome || !email || !cargo || !unidade) {
+          mostrarMensagem('Preencha todos os campos antes de avançar.', 'erro');
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          mostrarMensagem('Digite um e-mail válido.', 'erro');
+          return;
+        }
+      }
+
+      limparMensagem();
+      fase1.classList.remove('ativa');
+      fase3.classList.remove('ativa');
+      fase2.classList.add('ativa');
+      progressFill.style.width = '66%';
+      progressText.innerHTML = 'Etapa <strong>2</strong> de 3';
+      progressStage.textContent = 'Equipamentos';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function voltarParaEtapa1(manterMensagem) {
+      if (manterMensagem !== true) {
+        limparMensagem();
+      }
+      fase2.classList.remove('ativa');
+      fase3.classList.remove('ativa');
+      fase1.classList.add('ativa');
+      progressFill.style.width = '33%';
+      progressText.innerHTML = 'Etapa <strong>1</strong> de 3';
+      progressStage.textContent = 'Dados pessoais';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function irParaEtapa3() {
+      const modeloNotebook = selectModeloNotebook.value;
+      const patrimonioNotebook = document.getElementById('patrimonioNotebook').value.trim();
+      const modeloCelular = selectModeloCelular.value;
+      const imeiCelular = imeiInput.value.trim();
+
+      if (!modeloNotebook || !patrimonioNotebook || !modeloCelular || !imeiCelular) {
+        mostrarMensagem('Preencha todos os campos de equipamentos antes de avançar.', 'erro');
+        return;
+      }
+      if (imeiCelular.length !== 15) {
+        mostrarMensagem('O IMEI deve conter exatamente 15 dígitos.', 'erro');
+        return;
+      }
+
+      limparMensagem();
+
+      // Preenche os valores na tela de revisão
+      document.getElementById('revNome').textContent = document.getElementById('nome').value.trim();
+      document.getElementById('revEmail').textContent = document.getElementById('email').value.trim();
+      document.getElementById('revCargo').textContent = document.getElementById('cargo').value.trim();
+      document.getElementById('revUnidade').textContent = document.getElementById('unidade').value.trim();
+      document.getElementById('revNotebook').textContent = modeloNotebook;
+      document.getElementById('revPatrimonio').textContent = patrimonioNotebook;
+      document.getElementById('revCelular').textContent = modeloCelular;
+      document.getElementById('revImei').textContent = imeiCelular;
+
+      fase1.classList.remove('ativa');
+      fase2.classList.remove('ativa');
+      fase3.classList.add('ativa');
+      progressFill.style.width = '100%';
+      progressText.innerHTML = 'Etapa <strong>3</strong> de 3';
+      progressStage.textContent = 'Revisão dos dados';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    btnAvancar.addEventListener('click', function() { irParaEtapa2(false); });
+    btnVoltar.addEventListener('click', function() { voltarParaEtapa1(false); });
+    btnAvancarRevisao.addEventListener('click', irParaEtapa3);
+    btnVoltarFase2.addEventListener('click', function() { irParaEtapa2(true); });
+
+    function carregarOpcoes() {
+      google.script.run
+        .withSuccessHandler(function (opcoes) {
+          opcoes.notebooks.forEach(function (modelo) {
+            const opt = document.createElement('option');
+            opt.value = modelo;
+            opt.textContent = modelo;
+            selectModeloNotebook.appendChild(opt);
+          });
+          opcoes.celulares.forEach(function (modelo) {
+            const opt = document.createElement('option');
+            opt.value = modelo;
+            opt.textContent = modelo;
+            selectModeloCelular.appendChild(opt);
+          });
+        })
+        .withFailureHandler(function (erro) {
+          mostrarMensagem('Não foi possível carregar as opções de equipamentos: ' + erro.message, 'erro');
+        })
+        .getOpcoesEquipamentos();
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      limparMensagem();
+
+      const dados = {
+        nome: document.getElementById('nome').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        cargo: document.getElementById('cargo').value.trim(),
+        unidade: document.getElementById('unidade').value.trim(),
+        modeloNotebook: selectModeloNotebook.value,
+        patrimonioNotebook: document.getElementById('patrimonioNotebook').value.trim(),
+        modeloCelular: selectModeloCelular.value,
+        imeiCelular: imeiInput.value.trim()
+      };
+
+      if (!dados.nome || !dados.email || !dados.cargo || !dados.unidade ||
+          !dados.modeloNotebook || !dados.patrimonioNotebook || !dados.modeloCelular || !dados.imeiCelular) {
+        mostrarMensagem('Preencha todos os campos do formulário.', 'erro');
+        return;
+      }
+      if (dados.imeiCelular.length !== 15) {
+        mostrarMensagem('O IMEI deve conter exatamente 15 dígitos.', 'erro');
+        return;
+      }
+
+      btnEnviar.disabled = true;
+      btnVoltar.disabled = true;
+      btnVoltarFase2.disabled = true;
+      loadingText.style.display = 'flex';
+
+      google.script.run
+        .withSuccessHandler(function (resposta) {
+          loadingText.style.display = 'none';
+          btnEnviar.disabled = false;
+          btnVoltar.disabled = false;
+          btnVoltarFase2.disabled = false;
+
+          if (resposta.sucesso) {
+            mostrarMensagem(resposta.mensagem, 'sucesso');
+            form.reset();
+            voltarParaEtapa1(true);
+            setTimeout(limparMensagem, 5000);
+          } else {
+            mostrarMensagem(resposta.mensagem, 'erro');
+          }
+        })
+        .withFailureHandler(function (erro) {
+          loadingText.style.display = 'none';
+          btnEnviar.disabled = false;
+          btnVoltar.disabled = false;
+          btnVoltarFase2.disabled = false;
+          mostrarMensagem('Erro inesperado: ' + erro.message, 'erro');
+        })
+        .processarCadastro(dados);
+    });
+
+    carregarOpcoes();
+
+    document.addEventListener('mousemove', function (e) {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      document.body.style.setProperty('--mouse-x', `${x}%`);
+      document.body.style.setProperty('--mouse-y', `${y}%`);
+    });
+  </script>
+
+</body>
+</html>

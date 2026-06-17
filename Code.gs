@@ -1,0 +1,284 @@
+/**
+ * TI · Inventário Corporativo
+ * Projeto: Cadastro de Periféricos (Locagora)
+ * 
+ * Este arquivo contém as funções do servidor executadas no ambiente do Google Apps Script.
+ */
+
+/**
+ * Serve o formulário HTML quando a URL da Web App for acessada.
+ */
+function doGet(e) {
+  return HtmlService.createHtmlOutputFromFile('index')
+      .setTitle('Cadastro de Periféricos')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * Retorna as opções de equipamentos para popular as seleções de Notebook e Celular.
+ * Tenta ler de uma aba chamada "Opcoes" na planilha ativa. Se a aba ou planilha
+ * não existir, retorna opções padrão/fallback.
+ * 
+ * @return {Object} Objeto contendo listas de notebooks e celulares
+ */
+function getOpcoesEquipamentos() {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) {
+      var sheet = ss.getSheetByName('Opcoes');
+      if (sheet) {
+        var data = sheet.getDataRange().getValues();
+        var notebooks = [];
+        var celulares = [];
+        
+        // Assume que a primeira linha (índice 0) é o cabeçalho: "Notebooks", "Celulares"
+        for (var i = 1; i < data.length; i++) {
+          var row = data[i];
+          if (row[0] && row[0].toString().trim() !== "") {
+            notebooks.push(row[0].toString().trim());
+          }
+          if (row[1] && row[1].toString().trim() !== "") {
+            celulares.push(row[1].toString().trim());
+          }
+        }
+        
+        // Se encontramos dados, retorna eles
+        if (notebooks.length > 0 || celulares.length > 0) {
+          return {
+            notebooks: notebooks,
+            celulares: celulares
+          };
+        }
+      }
+    }
+  } catch (e) {
+    Logger.log("Aviso: Não foi possível carregar as opções da planilha. Usando valores padrão. Detalhes: " + e.toString());
+  }
+  
+  // Opções fallback padrão caso a planilha ou aba não estejam configuradas
+  return {
+    notebooks: [
+      "Notebook Lenovo preto",
+      "Notebook Lenovo Prata"
+    ],
+    celulares: [
+      "Moto G24",
+      "Poco C65",
+      "Redmi 13C"
+    ]
+  };
+}
+
+/**
+ * Gera um recibo PDF estilizado com as informações cadastradas e salva no Google Drive.
+ * 
+ * @param {Object} dados Dados recebidos do formulário
+ * @return {String} URL do arquivo PDF gerado
+ */
+function gerarPDF(dados) {
+  var dataFormatada = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  
+  var htmlContent = 
+    "<!DOCTYPE html><html><head><meta charset='utf-8'>" +
+    "<style>" +
+      "body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2d3748; line-height: 1.6; margin: 0; padding: 40px; background-color: #f7fafc; }" +
+      ".container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid #c9a449; }" +
+      ".header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }" +
+      ".header h1 { font-size: 24px; color: #1a202c; margin: 0 0 8px; font-weight: 700; }" +
+      ".header p { font-size: 13px; color: #718096; margin: 0; }" +
+      ".section-title { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: #c9a449; font-weight: 700; margin: 25px 0 12px; border-bottom: 1px solid #edf2f7; padding-bottom: 6px; }" +
+      ".info-grid { display: table; width: 100%; margin-bottom: 20px; }" +
+      ".info-row { display: table-row; }" +
+      ".info-label { display: table-cell; font-weight: bold; width: 35%; padding: 8px 0; color: #4a5568; font-size: 14px; border-bottom: 1px solid #edf2f7; }" +
+      ".info-value { display: table-cell; padding: 8px 0; color: #2d3748; font-size: 14px; border-bottom: 1px solid #edf2f7; }" +
+      ".footer { text-align: center; margin-top: 40px; font-size: 11px; color: #a0aec0; border-top: 1px solid #e2e8f0; padding-top: 20px; }" +
+    "</style>" +
+    "</head><body>" +
+      "<div class='container'>" +
+        "<div class='header'>" +
+          "<h1>Recibo de Atribuição de Ativos</h1>" +
+          "<p>TI · Inventário Locagora Periféricos</p>" +
+        "</div>" +
+        
+        "<div class='section-title'>Dados Pessoais</div>" +
+        "<div class='info-grid'>" +
+          "<div class='info-row'><div class='info-label'>Nome Completo:</div><div class='info-value'>" + dados.nome + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>E-mail Corporativo:</div><div class='info-value'>" + dados.email + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Cargo:</div><div class='info-value'>" + dados.cargo + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Unidade de Atuação:</div><div class='info-value'>" + dados.unidade + "</div></div>" +
+        "</div>" +
+        
+        "<div class='section-title'>Notebook Atribuído</div>" +
+        "<div class='info-grid'>" +
+          "<div class='info-row'><div class='info-label'>Modelo do Notebook:</div><div class='info-value'>" + dados.modeloNotebook + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>Número de Patrimônio:</div><div class='info-value'>" + dados.patrimonioNotebook + "</div></div>" +
+        "</div>" +
+        
+        "<div class='section-title'>Celular Atribuído</div>" +
+        "<div class='info-grid'>" +
+          "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCelular + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>IMEI do Celular:</div><div class='info-value'>" + dados.imeiCelular + "</div></div>" +
+        "</div>" +
+        
+        "<div class='footer'>" +
+          "<p>Documento de controle interno registrado em " + dataFormatada + "</p>" +
+          "<p>Este documento serve como comprovante digital de termo de responsabilidade de uso de ativos.</p>" +
+        "</div>" +
+      "</div>" +
+    "</body></html>";
+
+  var blob = HtmlService.createHtmlOutput(htmlContent).getAs('application/pdf');
+  blob.setName("Recibo_Ativos_" + dados.nome.replace(/\s+/g, "_") + "_" + new Date().getTime() + ".pdf");
+
+  var folder = obterOuCriarPasta();
+  var file = folder.createFile(blob);
+  
+  // Define permissão para qualquer pessoa com o link visualizar
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  
+  return file.getUrl();
+}
+
+/**
+ * Obtém ou cria a pasta de recebidos no Google Drive.
+ */
+function obterOuCriarPasta() {
+  var folderName = "Recibos_Cadastro_Locagora";
+  var folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return DriveApp.createFolder(folderName);
+}
+
+/**
+ * Processa a submissão de cadastro e grava em uma linha na planilha ativa,
+ * em uma aba chamada "Respostas". Cria e formata a aba automaticamente se não existir.
+ * 
+ * @param {Object} dados Dados recebidos do formulário
+ * @return {Object} Status do processamento
+ */
+function processarCadastro(dados) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      return {
+        sucesso: false,
+        mensagem: "Erro no Servidor: Este script precisa estar vinculado a uma Planilha do Google."
+      };
+    }
+    
+    // Tenta obter a aba "Respostas". Se não existir, cria e formata
+    var sheet = ss.getSheetByName('Respostas');
+    if (!sheet) {
+      sheet = ss.insertSheet('Respostas');
+      
+      // Cabeçalho da tabela
+      var cabecalhos = [
+        "Data/Hora de Registro", 
+        "Nome Completo", 
+        "E-mail Corporativo", 
+        "Cargo", 
+        "Unidade", 
+        "Modelo do Notebook", 
+        "Patrimônio do Notebook", 
+        "Modelo do Celular", 
+        "IMEI do Celular",
+        "Link do PDF de Recibo"
+      ];
+      
+      sheet.appendRow(cabecalhos);
+      
+      // Formata a linha de cabeçalho para ficar elegante
+      var range = sheet.getRange(1, 1, 1, cabecalhos.length);
+      range.setFontWeight("bold");
+      range.setBackground("#c9a449"); // Gold corporativo do tema
+      range.setFontColor("#1a1407"); // Contraste escuro
+      range.setHorizontalAlignment("center");
+      
+      sheet.setFrozenRows(1);
+    } else {
+      // Se a aba existe mas não tem a coluna de PDF, adiciona a coluna
+      if (sheet.getLastColumn() === 9) {
+        var range = sheet.getRange(1, 10);
+        range.setValue("Link do PDF de Recibo");
+        range.setFontWeight("bold");
+        range.setBackground("#c9a449");
+        range.setFontColor("#1a1407");
+        range.setHorizontalAlignment("center");
+      }
+    }
+    
+    // Validações de segurança no lado do servidor
+    if (!dados.nome || !dados.nome.trim() ||
+        !dados.email || !dados.email.trim() ||
+        !dados.cargo || !dados.cargo.trim() ||
+        !dados.unidade || !dados.unidade.trim() ||
+        !dados.modeloNotebook ||
+        !dados.patrimonioNotebook || !dados.patrimonioNotebook.trim() ||
+        !dados.modeloCelular ||
+        !dados.imeiCelular || !dados.imeiCelular.trim()) {
+      return {
+        sucesso: false,
+        mensagem: "Todos os campos do formulário são de preenchimento obrigatório."
+      };
+    }
+    
+    // Validação de e-mail simplificada no servidor
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(dados.email.trim())) {
+      return {
+        sucesso: false,
+        mensagem: "O e-mail corporativo fornecido é inválido."
+      };
+    }
+    
+    // Validação de IMEI (deve conter exatamente 15 dígitos numéricos)
+    var imeiLimpo = dados.imeiCelular.replace(/\D/g, '');
+    if (imeiLimpo.length !== 15) {
+      return {
+        sucesso: false,
+        mensagem: "O IMEI celular deve possuir exatamente 15 dígitos numéricos."
+      };
+    }
+    
+    // Gera o recibo PDF e obtém o link do arquivo
+    var pdfUrl = "";
+    try {
+      pdfUrl = gerarPDF(dados);
+    } catch (ePdf) {
+      Logger.log("Erro ao gerar PDF: " + ePdf.toString());
+    }
+    
+    // Insere o registro de cadastro com timestamp
+    sheet.appendRow([
+      new Date(),
+      dados.nome.trim(),
+      dados.email.trim(),
+      dados.cargo.trim(),
+      dados.unidade.trim(),
+      dados.modeloNotebook,
+      dados.patrimonioNotebook.trim(),
+      dados.modeloCelular,
+      imeiLimpo,
+      pdfUrl
+    ]);
+    
+    // Auto-ajusta as colunas após inserção para legibilidade
+    try {
+      sheet.autoResizeColumns(1, 10);
+    } catch(e) {}
+    
+    return {
+      sucesso: true,
+      mensagem: "Cadastro de periféricos efetuado e registrado com sucesso!"
+    };
+    
+  } catch (erro) {
+    return {
+      sucesso: false,
+      mensagem: "Erro crítico ao gravar dados na planilha: " + erro.toString()
+    };
+  }
+}
