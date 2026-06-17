@@ -9,7 +9,12 @@
  * Serve o formulário HTML quando a URL da Web App for acessada.
  */
 function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile('index')
+  var cacheBuster = new Date().getTime();
+  var url = "https://raw.githubusercontent.com/Murillooh/forms-vericacao/main/index.html?cb=" + cacheBuster;
+  var response = UrlFetchApp.fetch(url);
+  var html = response.getContentText();
+  
+  return HtmlService.createHtmlOutput(html)
       .setTitle('Cadastro de Periféricos')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
