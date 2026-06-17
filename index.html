@@ -86,13 +86,34 @@
       width: 100%;
       max-width: 960px;
       min-height: 580px;
-      background: rgba(8, 8, 12, 0.9);
+      background: rgba(8, 8, 12, 0.95);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      border: 1.5px solid rgba(223, 178, 71, 0.25);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+      box-shadow: 
+        0 24px 60px rgba(0, 0, 0, 0.7),
+        0 0 20px rgba(223, 178, 71, 0.1),
+        0 0 40px rgba(223, 178, 71, 0.03);
+      animation: borderGlow 6s infinite alternate ease-in-out;
+    }
+
+    @keyframes borderGlow {
+      0% {
+        border-color: rgba(223, 178, 71, 0.2);
+        box-shadow: 
+          0 24px 60px rgba(0, 0, 0, 0.7),
+          0 0 20px rgba(223, 178, 71, 0.08),
+          0 0 40px rgba(223, 178, 71, 0.02);
+      }
+      100% {
+        border-color: rgba(223, 178, 71, 0.45);
+        box-shadow: 
+          0 24px 60px rgba(0, 0, 0, 0.7),
+          0 0 35px rgba(223, 178, 71, 0.22),
+          0 0 70px rgba(223, 178, 71, 0.08);
+      }
     }
 
     .sidebar {
@@ -251,7 +272,9 @@
     input:focus, select:focus {
       border-color: var(--gold-bright);
       background: rgba(255, 255, 255, 0.06);
-      box-shadow: 0 0 16px rgba(223, 178, 71, 0.15);
+      box-shadow: 
+        0 0 12px rgba(223, 178, 71, 0.35),
+        0 0 24px rgba(223, 178, 71, 0.15);
     }
 
     /* Fix autofill/autocomplete background in dark mode */
