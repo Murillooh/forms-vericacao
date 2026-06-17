@@ -724,6 +724,37 @@
       height: 100%;
       cursor: crosshair;
     }
+
+    /* Estrelas piscantes no fundo */
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      animation: twinkle var(--duration, 3s) infinite ease-in-out;
+      opacity: 0.15;
+    }
+    
+    @keyframes twinkle {
+      0%, 100% {
+        opacity: 0.15;
+        transform: scale(0.8);
+      }
+      50% {
+        opacity: 0.95;
+        transform: scale(1.3);
+        box-shadow: 0 0 6px currentColor;
+      }
+    }
   </style>
   <script>
     // Mock do google.script.run para desenvolvimento local
@@ -1475,8 +1506,41 @@
       }
     });
 
+    // Cria estrelas piscantes de forma dinâmica e aleatória no background
+    function criarEstrelasPiscantes() {
+      const starsContainer = document.createElement('div');
+      starsContainer.className = 'stars';
+      document.body.appendChild(starsContainer);
+      
+      const numStars = 80;
+      const colors = ['#ffffff', '#ffffff', '#ffd97d', '#f3f1ec'];
+      
+      for (let i = 0; i < numStars; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        
+        const size = Math.random() * 2 + 1; // de 1px a 3px
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        
+        star.style.left = `${Math.random() * 100}vw`;
+        star.style.top = `${Math.random() * 100}vh`;
+        
+        const duration = Math.random() * 3 + 2; // entre 2s e 5s
+        const delay = Math.random() * 4; // delay de até 4s
+        star.style.setProperty('--duration', `${duration}s`);
+        star.style.animationDelay = `${delay}s`;
+        
+        star.style.color = colors[Math.floor(Math.random() * colors.length)];
+        star.style.background = 'currentColor';
+        
+        starsContainer.appendChild(star);
+      }
+    }
+
     carregarOpcoes();
     carregarDadosUsuarioSSO();
+    criarEstrelasPiscantes();
 
     document.addEventListener('mousemove', function (e) {
       const x = (e.clientX / window.innerWidth) * 100;
