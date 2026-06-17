@@ -1322,10 +1322,11 @@
               <div class="signing-col-camera" style="flex: 1; display: flex; flex-direction: column;">
                 <div class="camera-container">
                   <input type="file" accept="image/*" capture="user" id="cameraFile" style="display: none;">
+                  <video id="webcam" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
                   <img id="photoPreview" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
                   <div class="camera-placeholder" id="cameraPlaceholder">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                    <span style="font-size: 9px; margin-top: 4px; text-align: center;">Foto de Validação</span>
+                    <span style="font-size: 9px; margin-top: 4px; text-align: center;">Carregando...</span>
                   </div>
                 </div>
                 <button type="button" class="btn-edit-link" id="btnCapturarFoto" style="margin-top: 6px; width: 100%; padding: 6px;">Tirar Foto</button>
@@ -1985,27 +1986,120 @@
     // Código de gerenciamento da câmera
     let webcamStream = null;
     let fotoBase64 = "";
+    let usandoFallbackArquivo = false;
 
     function inicializarWebcam() {
-      fotoBase64 = "";
+      const video = document.getElementById('webcam');
       const photoPreview = document.getElementById('photoPreview');
       const placeholder = document.getElementById('cameraPlaceholder');
       const btnFoto = document.getElementById('btnCapturarFoto');
       
+      fotoBase64 = "";
+      usandoFallbackArquivo = false;
+      
+      if (video) video.style.display = 'none';
       photoPreview.style.display = 'none';
       placeholder.style.display = 'flex';
+      placeholder.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font-size: 9px; margin-top: 4px; text-align: center;">Carregando...</span>';
+      btnFoto.textContent = "Tirar Foto";
+      btnFoto.style.display = 'none';
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+          .then(function(stream) {
+            webcamStream = stream;
+            if (video) {
+              video.srcObject = stream;
+              video.style.display = 'block';
+            }
+            placeholder.style.display = 'none';
+            btnFoto.style.display = 'block';
+          })
+          .catch(function(err) {
+            console.log("Erro ao acessar câmera frontal, tentando genérica...", err);
+            navigator.mediaDevices.getUserMedia({ video: true })
+              .then(function(stream) {
+                webcamStream = stream;
+                if (video) {
+                  video.srcObject = stream;
+                  video.style.display = 'block';
+                }
+                placeholder.style.display = 'none';
+                btnFoto.style.display = 'block';
+              })
+              .catch(function(errGen) {
+                console.log("Webcam não pôde ser iniciada (bloqueada pelo sandbox/iframe). Ativando fallback de arquivo.", errGen);
+                ativarFallbackCameraNativa();
+              });
+          });
+      } else {
+        ativarFallbackCameraNativa();
+      }
+    }
+
+    function ativarFallbackCameraNativa() {
+      usandoFallbackArquivo = true;
+      const video = document.getElementById('webcam');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      const btnFoto = document.getElementById('btnCapturarFoto');
+      
+      if (video) video.style.display = 'none';
+      placeholder.style.display = 'flex';
+      placeholder.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="font-size: 9px; margin-top: 4px; text-align: center;">Foto de Validação</span>';
       btnFoto.textContent = "Tirar Foto";
       btnFoto.style.display = 'block';
     }
 
     function pararWebcam() {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+        webcamStream = null;
+      }
+      const video = document.getElementById('webcam');
+      if (video) video.srcObject = null;
       const cameraFile = document.getElementById('cameraFile');
       if (cameraFile) cameraFile.value = "";
       fotoBase64 = "";
     }
 
     document.getElementById('btnCapturarFoto').addEventListener('click', function() {
-      document.getElementById('cameraFile').click();
+      const video = document.getElementById('webcam');
+      const photoPreview = document.getElementById('photoPreview');
+      const btnFoto = document.getElementById('btnCapturarFoto');
+      
+      if (btnFoto.textContent === "Tirar Outra") {
+        inicializarWebcam();
+        return;
+      }
+
+      if (usandoFallbackArquivo) {
+        document.getElementById('cameraFile').click();
+        return;
+      }
+
+      if (!webcamStream) return;
+
+      const canvasCaptura = document.createElement('canvas');
+      canvasCaptura.width = video.videoWidth || 320;
+      canvasCaptura.height = video.videoHeight || 240;
+      const ctxCaptura = canvasCaptura.getContext('2d');
+      
+      ctxCaptura.translate(canvasCaptura.width, 0);
+      ctxCaptura.scale(-1, 1);
+      
+      ctxCaptura.drawImage(video, 0, 0, canvasCaptura.width, canvasCaptura.height);
+      
+      fotoBase64 = canvasCaptura.toDataURL('image/jpeg', 0.85);
+      
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(track => track.stop());
+        webcamStream = null;
+      }
+      
+      if (video) video.style.display = 'none';
+      photoPreview.src = fotoBase64;
+      photoPreview.style.display = 'block';
+      btnFoto.textContent = "Tirar Outra";
     });
 
     document.getElementById('cameraFile').addEventListener('change', function(e) {
