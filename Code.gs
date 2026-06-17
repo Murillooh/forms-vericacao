@@ -6,9 +6,16 @@
  */
 
 /**
- * Serve o formulário HTML quando a URL da Web App for acessada.
+ * Serve o formulário HTML quando a URL da Web App for acessada ou retorna opções de equipamentos em formato JSON.
  */
 function doGet(e) {
+  // Se a requisição vier do GitHub Pages ou Localhost para obter as opções de equipamentos
+  if (e && e.parameter && e.parameter.action === "getOptions") {
+    var opcoes = getOpcoesEquipamentos();
+    return ContentService.createTextOutput(JSON.stringify(opcoes))
+        .setMimeType(ContentService.MimeType.JSON);
+  }
+
   var cacheBuster = new Date().getTime();
   var url = "https://raw.githubusercontent.com/Murillooh/forms-vericacao/main/index.html?cb=" + cacheBuster;
   var response = UrlFetchApp.fetch(url);
@@ -18,6 +25,37 @@ function doGet(e) {
       .setTitle('Cadastro de Periféricos')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+/**
+ * Ponto de entrada para receber requisições POST externas do GitHub Pages ou Localhost.
+ */
+function doPost(e) {
+  try {
+    var dados;
+    // Se o payload vier como JSON stringificado em text/plain
+    if (e && e.postData && e.postData.contents) {
+      dados = JSON.parse(e.postData.contents);
+    } else if (e && e.parameter) {
+      dados = e.parameter;
+    } else {
+      throw new Error("Nenhum dado recebido no payload da requisição.");
+    }
+    
+    // Processa o cadastro
+    var resposta = processarCadastro(dados);
+    
+    return ContentService.createTextOutput(JSON.stringify(resposta))
+        .setMimeType(ContentService.MimeType.JSON);
+        
+  } catch (erro) {
+    var respostaErro = {
+      sucesso: false,
+      mensagem: "Erro ao processar cadastro (CORS/API): " + erro.toString()
+    };
+    return ContentService.createTextOutput(JSON.stringify(respostaErro))
+        .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**

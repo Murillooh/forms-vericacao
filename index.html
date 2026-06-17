@@ -830,6 +830,7 @@
   </div>
 
   <script>
+    const WEB_APP_URL = "https://script.google.com/a/macros/locgrupo.com.br/s/AKfycbxgT9_tpHyhfprb5oHcCoCNPKMncR3r4dKcBA7kT9_plJyZFJzohj5n_7R3CRDsNWK4w/exec";
     const form = document.getElementById('formCadastro');
     const fase1 = document.getElementById('fase1');
     const fase2 = document.getElementById('fase2');
@@ -950,26 +951,73 @@
     btnAvancarRevisao.addEventListener('click', irParaEtapa3);
     btnVoltarFase2.addEventListener('click', function() { irParaEtapa2(true); });
 
+    function popularEquipamentos(opcoes) {
+      // Limpa as opções existentes (exceto a primeira)
+      selectModeloNotebook.innerHTML = '<option value="">Selecione o modelo</option>';
+      selectModeloCelular.innerHTML = '<option value="">Selecione o modelo</option>';
+
+      opcoes.notebooks.forEach(function (modelo) {
+        const opt = document.createElement('option');
+        opt.value = modelo;
+        opt.textContent = modelo;
+        selectModeloNotebook.appendChild(opt);
+      });
+      opcoes.celulares.forEach(function (modelo) {
+        const opt = document.createElement('option');
+        opt.value = modelo;
+        opt.textContent = modelo;
+        selectModeloCelular.appendChild(opt);
+      });
+    }
+
     function carregarOpcoes() {
-      google.script.run
-        .withSuccessHandler(function (opcoes) {
-          opcoes.notebooks.forEach(function (modelo) {
-            const opt = document.createElement('option');
-            opt.value = modelo;
-            opt.textContent = modelo;
-            selectModeloNotebook.appendChild(opt);
+      // Se estiver rodando dentro do Apps Script (como Web App direto)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(popularEquipamentos)
+          .withFailureHandler(function (erro) {
+            mostrarMensagem('Não foi possível carregar as opções de equipamentos: ' + erro.message, 'erro');
+          })
+          .getOpcoesEquipamentos();
+      } else {
+        // Se estiver rodando fora (GitHub Pages ou local)
+        fetch(WEB_APP_URL + "?action=getOptions")
+          .then(function (res) { return res.json(); })
+          .then(popularEquipamentos)
+          .catch(function (erro) {
+            console.log("Aviso: Falha ao carregar opções via API, usando fallback local. Detalhes: ", erro);
+            // Fallback usando opções padrão
+            const fallbackOpcoes = {
+              notebooks: ["Notebook Lenovo preto", "Notebook Lenovo Prata"],
+              celulares: ["Moto G24", "Poco C65", "Redmi 13C"]
+            };
+            popularEquipamentos(fallbackOpcoes);
           });
-          opcoes.celulares.forEach(function (modelo) {
-            const opt = document.createElement('option');
-            opt.value = modelo;
-            opt.textContent = modelo;
-            selectModeloCelular.appendChild(opt);
-          });
-        })
-        .withFailureHandler(function (erro) {
-          mostrarMensagem('Não foi possível carregar as opções de equipamentos: ' + erro.message, 'erro');
-        })
-        .getOpcoesEquipamentos();
+      }
+    }
+
+    function tratarSucessoEnvio(resposta) {
+      loadingText.style.display = 'none';
+      btnEnviar.disabled = false;
+      btnVoltar.disabled = false;
+      btnVoltarFase2.disabled = false;
+
+      if (resposta.sucesso) {
+        mostrarMensagem(resposta.mensagem, 'sucesso');
+        form.reset();
+        voltarParaEtapa1(true);
+        setTimeout(limparMensagem, 5000);
+      } else {
+        mostrarMensagem(resposta.mensagem, 'erro');
+      }
+    }
+
+    function tratarFalhaEnvio(erro) {
+      loadingText.style.display = 'none';
+      btnEnviar.disabled = false;
+      btnVoltar.disabled = false;
+      btnVoltarFase2.disabled = false;
+      mostrarMensagem('Erro inesperado ao enviar dados: ' + (erro.message || erro.toString()), 'erro');
     }
 
     form.addEventListener('submit', function (e) {
@@ -1002,30 +1050,25 @@
       btnVoltarFase2.disabled = true;
       loadingText.style.display = 'flex';
 
-      google.script.run
-        .withSuccessHandler(function (resposta) {
-          loadingText.style.display = 'none';
-          btnEnviar.disabled = false;
-          btnVoltar.disabled = false;
-          btnVoltarFase2.disabled = false;
-
-          if (resposta.sucesso) {
-            mostrarMensagem(resposta.mensagem, 'sucesso');
-            form.reset();
-            voltarParaEtapa1(true);
-            setTimeout(limparMensagem, 5000);
-          } else {
-            mostrarMensagem(resposta.mensagem, 'erro');
+      // Se estiver rodando dentro do Apps Script (como Web App direto)
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(tratarSucessoEnvio)
+          .withFailureHandler(tratarFalhaEnvio)
+          .processarCadastro(dados);
+      } else {
+        // Envio via POST (GitHub Pages ou local)
+        fetch(WEB_APP_URL, {
+          method: 'POST',
+          body: JSON.stringify(dados),
+          headers: {
+            'Content-Type': 'text/plain'
           }
         })
-        .withFailureHandler(function (erro) {
-          loadingText.style.display = 'none';
-          btnEnviar.disabled = false;
-          btnVoltar.disabled = false;
-          btnVoltarFase2.disabled = false;
-          mostrarMensagem('Erro inesperado: ' + erro.message, 'erro');
-        })
-        .processarCadastro(dados);
+        .then(function (res) { return res.json(); })
+        .then(tratarSucessoEnvio)
+        .catch(tratarFalhaEnvio);
+      }
     });
 
     carregarOpcoes();
