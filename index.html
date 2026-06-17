@@ -659,6 +659,11 @@
           </div>
 
           <div class="field">
+            <div class="field-label"><label for="cpf">CPF</label></div>
+            <input type="text" id="cpf" name="cpf" required placeholder="000.000.000-00" inputmode="numeric" maxlength="14">
+          </div>
+
+          <div class="field">
             <div class="field-label"><label for="email">E-mail corporativo</label></div>
             <input type="email" id="email" name="email" required placeholder="nome@empresa.com.br" autocomplete="email">
             <div class="field-help">
@@ -770,6 +775,10 @@
                 <span class="review-value" id="revNome"></span>
               </div>
               <div class="review-item">
+                <span class="review-label">CPF</span>
+                <span class="review-value" id="revCpf"></span>
+              </div>
+              <div class="review-item">
                 <span class="review-label">E-mail Corporativo</span>
                 <span class="review-value" id="revEmail"></span>
               </div>
@@ -852,12 +861,33 @@
     const selectModeloNotebook = document.getElementById('modeloNotebook');
     const selectModeloCelular = document.getElementById('modeloCelular');
     const imeiInput = document.getElementById('imeiCelular');
+    const cpfInput = document.getElementById('cpf');
 
     const ICON_ERRO = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
     const ICON_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>';
 
     imeiInput.addEventListener('input', function () {
       this.value = this.value.replace(/\D/g, '').slice(0, 15);
+    });
+
+    cpfInput.addEventListener('input', function (e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 11) value = value.slice(0, 11);
+      
+      let formatted = '';
+      if (value.length > 0) {
+        formatted += value.substring(0, 3);
+        if (value.length > 3) {
+          formatted += '.' + value.substring(3, 6);
+          if (value.length > 6) {
+            formatted += '.' + value.substring(6, 9);
+            if (value.length > 9) {
+              formatted += '-' + value.substring(9, 11);
+            }
+          }
+        }
+      }
+      e.target.value = formatted;
     });
 
     function mostrarMensagem(texto, tipo) {
@@ -874,12 +904,17 @@
     function irParaEtapa2(skipValidation) {
       if (skipValidation !== true) {
         const nome = document.getElementById('nome').value.trim();
+        const cpf = document.getElementById('cpf').value.trim();
         const email = document.getElementById('email').value.trim();
         const cargo = document.getElementById('cargo').value.trim();
         const unidade = document.getElementById('unidade').value.trim();
 
-        if (!nome || !email || !cargo || !unidade) {
+        if (!nome || !cpf || !email || !cargo || !unidade) {
           mostrarMensagem('Preencha todos os campos antes de avançar.', 'erro');
+          return;
+        }
+        if (cpf.replace(/\D/g, '').length !== 11) {
+          mostrarMensagem('Digite um CPF válido com 11 dígitos.', 'erro');
           return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -930,6 +965,7 @@
 
       // Preenche os valores na tela de revisão
       document.getElementById('revNome').textContent = document.getElementById('nome').value.trim();
+      document.getElementById('revCpf').textContent = document.getElementById('cpf').value.trim();
       document.getElementById('revEmail').textContent = document.getElementById('email').value.trim();
       document.getElementById('revCargo').textContent = document.getElementById('cargo').value.trim();
       document.getElementById('revUnidade').textContent = document.getElementById('unidade').value.trim();
@@ -1027,6 +1063,7 @@
 
       const dados = {
         nome: document.getElementById('nome').value.trim(),
+        cpf: document.getElementById('cpf').value.trim(),
         email: document.getElementById('email').value.trim(),
         cargo: document.getElementById('cargo').value.trim(),
         unidade: document.getElementById('unidade').value.trim(),
@@ -1036,9 +1073,13 @@
         imeiCelular: imeiInput.value.trim()
       };
 
-      if (!dados.nome || !dados.email || !dados.cargo || !dados.unidade ||
+      if (!dados.nome || !dados.cpf || !dados.email || !dados.cargo || !dados.unidade ||
           !dados.modeloNotebook || !dados.patrimonioNotebook || !dados.modeloCelular || !dados.imeiCelular) {
         mostrarMensagem('Preencha todos os campos do formulário.', 'erro');
+        return;
+      }
+      if (dados.cpf.replace(/\D/g, '').length !== 11) {
+        mostrarMensagem('O CPF deve conter exatamente 11 dígitos.', 'erro');
         return;
       }
       if (dados.imeiCelular.length !== 15) {

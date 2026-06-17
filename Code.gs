@@ -152,6 +152,7 @@ function gerarPDF(dados) {
         "<div class='section-title'>Dados Pessoais</div>" +
         "<div class='info-grid'>" +
           "<div class='info-row'><div class='info-label'>Nome Completo:</div><div class='info-value'>" + dados.nome + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>CPF:</div><div class='info-value'>" + formatarCPF(dados.cpf) + "</div></div>" +
           "<div class='info-row'><div class='info-label'>E-mail Corporativo:</div><div class='info-value'>" + dados.email + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Cargo:</div><div class='info-value'>" + dados.cargo + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Unidade de Atuação:</div><div class='info-value'>" + dados.unidade + "</div></div>" +
@@ -231,6 +232,7 @@ function processarCadastro(dados) {
       var cabecalhos = [
         "Data/Hora de Registro", 
         "Nome Completo", 
+        "CPF",
         "E-mail Corporativo", 
         "Cargo", 
         "Unidade", 
@@ -244,10 +246,21 @@ function processarCadastro(dados) {
       sheet.appendRow(cabecalhos);
       sheet.setFrozenRows(1);
     } else {
-      // Se a aba existe mas não tem a coluna de PDF, adiciona a coluna
-      if (sheet.getLastColumn() === 9) {
-        var range = sheet.getRange(1, 10);
-        range.setValue("Link do PDF de Recibo");
+      // Garante que o cabeçalho tem o CPF
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var hasCpf = headers.indexOf("CPF") !== -1;
+      if (!hasCpf) {
+        // Insere a coluna CPF na posição 3 (depois de Nome Completo)
+        sheet.insertColumnBefore(3);
+        sheet.getRange(1, 3).setValue("CPF");
+      }
+      
+      // Garante que tem a coluna de Recibo PDF no final
+      if (sheet.getLastColumn() < 11) {
+        var headersAtualizados = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        if (headersAtualizados.indexOf("Link do PDF de Recibo") === -1) {
+          sheet.getRange(1, sheet.getLastColumn() + 1).setValue("Link do PDF de Recibo");
+        }
       }
     }
 
@@ -260,6 +273,7 @@ function processarCadastro(dados) {
     
     // Validações de segurança no lado do servidor
     if (!dados.nome || !dados.nome.trim() ||
+        !dados.cpf || !dados.cpf.trim() ||
         !dados.email || !dados.email.trim() ||
         !dados.cargo || !dados.cargo.trim() ||
         !dados.unidade || !dados.unidade.trim() ||
@@ -270,6 +284,15 @@ function processarCadastro(dados) {
       return {
         sucesso: false,
         mensagem: "Todos os campos do formulário são de preenchimento obrigatório."
+      };
+    }
+    
+    // Validação de CPF no servidor
+    var cpfLimpo = dados.cpf.replace(/\D/g, '');
+    if (cpfLimpo.length !== 11) {
+      return {
+        sucesso: false,
+        mensagem: "O CPF deve possuir exatamente 11 dígitos numéricos."
       };
     }
     
@@ -303,6 +326,7 @@ function processarCadastro(dados) {
     sheet.appendRow([
       new Date(),
       dados.nome.trim(),
+      formatarCPF(dados.cpf),
       dados.email.trim(),
       dados.cargo.trim(),
       dados.unidade.trim(),
@@ -320,17 +344,20 @@ function processarCadastro(dados) {
       dataRange.setFontColor("#ffd97d"); // Letras Douradas Brilhantes
       dataRange.setHorizontalAlignment("left");
       
-      // Centraliza coluna de Data/Hora e link do PDF
+      // Centraliza coluna de Data/Hora, CPF e link do PDF
       var dataHoraRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1);
       dataHoraRange.setHorizontalAlignment("center");
       
-      var linkPdfRange = sheet.getRange(2, 10, sheet.getLastRow() - 1, 1);
+      var cpfCellRange = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1);
+      cpfCellRange.setHorizontalAlignment("center");
+      
+      var linkPdfRange = sheet.getRange(2, 11, sheet.getLastRow() - 1, 1);
       linkPdfRange.setHorizontalAlignment("center");
     }
     
     // Auto-ajusta as colunas após inserção para legibilidade
     try {
-      sheet.autoResizeColumns(1, 10);
+      sheet.autoResizeColumns(1, 11);
     } catch(e) {}
     
     return {
@@ -344,4 +371,15 @@ function processarCadastro(dados) {
       mensagem: "Erro crítico ao gravar dados na planilha: " + erro.toString()
     };
   }
+}
+
+/**
+ * Formata uma string de CPF para o padrão 000.000.000-00.
+ */
+function formatarCPF(cpf) {
+  var cpfLimpo = cpf.replace(/\D/g, '');
+  if (cpfLimpo.length === 11) {
+    return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+  }
+  return cpf;
 }
