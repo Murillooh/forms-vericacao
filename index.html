@@ -520,16 +520,19 @@
     .fase {
       width: 100%;
       will-change: transform, opacity;
+      display: none;
     }
 
     /* Estado ativo: fase visível em repouso */
     .fase.ativa {
+      display: block;
       position: relative;
     }
 
     /* Estado inativo: absolutamente posicionada, oculta */
     .fase.saindo,
     .fase.entrando {
+      display: block;
       position: absolute;
       top: 0;
       left: 0;
@@ -1345,10 +1348,6 @@
       faseAtual.classList.add(classeSaida);
       faseAtual.classList.remove('ativa');
 
-      // — Ativar nova fase (passa para `relative`, entra no fluxo) —
-      novaFase.classList.add('ativa');
-      novaFase.classList.remove('entrando');
-
       // — Animar altura suavemente para a da nova fase —
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
@@ -1363,8 +1362,9 @@
       setTimeout(function() {
         // Remover classes de animação da fase que saiu
         faseAtual.classList.remove('saindo', classeSaida);
-        // Remover classes de entrada e liberar nova fase
-        novaFase.classList.remove(classeEntrada);
+        // Tornar nova fase ativa (display: block; position: relative) e limpar classes temporárias
+        novaFase.classList.remove('entrando', classeEntrada);
+        novaFase.classList.add('ativa');
         // Liberar altura fixa para o formulário ser responsivo novamente
         wrapper.style.height = '';
         wrapper.style.transition = '';
