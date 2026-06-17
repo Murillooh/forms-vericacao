@@ -437,6 +437,14 @@ function processarCadastro(dados) {
       };
     }
     
+    // Validação de Patrimônio do Notebook (deve conter exatamente 8 caracteres)
+    if (dados.patrimonioNotebook.trim().length !== 8) {
+      return {
+        sucesso: false,
+        mensagem: "O patrimônio do notebook deve conter exatamente 8 caracteres."
+      };
+    }
+
     // Validação de IMEI (deve conter exatamente 15 dígitos numéricos)
     var imeiLimpo = dados.imeiCelular.replace(/\D/g, '');
     if (imeiLimpo.length !== 15) {

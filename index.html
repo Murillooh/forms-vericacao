@@ -1122,7 +1122,7 @@
 
           <div class="field">
             <div class="field-label"><label for="patrimonioNotebook">Número de patrimônio</label></div>
-            <input type="text" id="patrimonioNotebook" name="patrimonioNotebook" required placeholder="Ex: NB-00214">
+            <input type="text" id="patrimonioNotebook" name="patrimonioNotebook" required placeholder="Ex: NB-00214" maxlength="8">
             <div class="field-help">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
               É a etiqueta colada na parte de baixo do notebook (o número do patrimônio geralmente fica logo após a sigla "S/N"). Vire o aparelho e procure a etiqueta da empresa.
@@ -1570,6 +1570,10 @@
         mostrarMensagem('Preencha todos os campos de equipamentos antes de avançar.', 'erro');
         return;
       }
+      if (patrimonioNotebook.length !== 8) {
+        mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
+        return;
+      }
       if (imeiCelular.length !== 15) {
         mostrarMensagem('O IMEI deve conter exatamente 15 dígitos.', 'erro');
         return;
@@ -1928,6 +1932,10 @@
       }
       if (!validarCPF(dados.cpf)) {
         mostrarMensagem('O CPF fornecido é inválido.', 'erro');
+        return;
+      }
+      if (dados.patrimonioNotebook.length !== 8) {
+        mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
         return;
       }
       if (dados.imeiCelular.length !== 15) {
