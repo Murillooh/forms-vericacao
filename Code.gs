@@ -67,7 +67,12 @@ function doPost(e) {
  */
 function getOpcoesEquipamentos() {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss;
+    try {
+      ss = SpreadsheetApp.openById("14QIAJQARsNntOpgsxSy6qFzfTPY1c74UPXSgCgOmHAA");
+    } catch(e) {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
     if (ss) {
       var sheet = ss.getSheetByName('Opcoes');
       if (sheet) {
@@ -204,11 +209,16 @@ function obterOuCriarPasta() {
  */
 function processarCadastro(dados) {
   try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss;
+    try {
+      ss = SpreadsheetApp.openById("14QIAJQARsNntOpgsxSy6qFzfTPY1c74UPXSgCgOmHAA");
+    } catch(e) {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
     if (!ss) {
       return {
         sucesso: false,
-        mensagem: "Erro no Servidor: Este script precisa estar vinculado a uma Planilha do Google."
+        mensagem: "Erro no Servidor: Não foi possível abrir a Planilha do Google."
       };
     }
     
