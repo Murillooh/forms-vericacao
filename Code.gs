@@ -185,7 +185,7 @@ function gerarPDF(dados) {
         "<div class='info-grid'>" +
           "<div class='info-row'><div class='info-label'>Nome Completo:</div><div class='info-value'>" + dados.nome + "</div></div>" +
           "<div class='info-row'><div class='info-label'>CPF:</div><div class='info-value'>" + formatarCPF(dados.cpf) + "</div></div>" +
-          "<div class='info-row'><div class='info-label'>E-mail Corporativo:</div><div class='info-value'>" + dados.email + "</div></div>" +
+          "<div class='info-row'><div class='info-label'>E-mail:</div><div class='info-value'>" + dados.email + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Cargo:</div><div class='info-value'>" + dados.cargo + "</div></div>" +
           "<div class='info-row'><div class='info-label'>Unidade de Atuação:</div><div class='info-value'>" + dados.unidade + "</div></div>" +
         "</div>" +
