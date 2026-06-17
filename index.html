@@ -132,6 +132,19 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      overflow: hidden;
+    }
+
+    #formCadastro {
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .form-slider {
+      display: flex;
+      width: 300%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      align-items: flex-start;
     }
 
     .eyebrow {
@@ -500,12 +513,31 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .fase { display: none; }
-    .fase.ativa { display: block; animation: fadeIn 0.3s ease; }
+    .fase {
+      display: block;
+      width: 33.3333%;
+      flex-shrink: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      position: relative;
+    }
+    .fase.ativa {
+      opacity: 1;
+      visibility: visible;
+    }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+    .fase:not(:first-child)::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, var(--gold-bright), var(--gold), transparent);
+      box-shadow: 0 0 12px rgba(223, 178, 71, 0.6), 0 0 4px rgba(223, 178, 71, 0.3);
+      opacity: 0.8;
+      pointer-events: none;
     }
 
     .footer-note {
@@ -914,8 +946,8 @@
       <!-- Painel Direito: Formulário Ativo -->
       <div class="main-form">
         <form id="formCadastro" novalidate>
-
-        <div class="fase ativa" id="fase1">
+          <div class="form-slider" id="formSlider">
+            <div class="fase ativa" id="fase1">
           <div class="fase-intro">
             <h2>Quem é você</h2>
             <p>Esses dados identificam o responsável pelos equipamentos no nosso controle interno. Confira se correspondem ao que está no seu cadastro de RH.</p>
@@ -1156,6 +1188,7 @@
           </div>
         </div>
 
+          </div>
         </form>
 
         <div class="loading-text" id="loadingText"><span class="spinner"></span>Enviando seus dados...</div>
@@ -1168,6 +1201,7 @@
     const WEB_APP_URL = "https://script.google.com/a/macros/locgrupo.com.br/s/AKfycbxgT9_tpYhefprb5oHcCoCNPKMncR3r4dKcBA7kT9_plLjyZFJZohj5n_7R3CRDsNWK4w/exec";
     const isExternal = window.location.hostname !== 'script.google.com' && !window.location.hostname.endsWith('.googleusercontent.com');
     const form = document.getElementById('formCadastro');
+    const formSlider = document.getElementById('formSlider');
     const fase1 = document.getElementById('fase1');
     const fase2 = document.getElementById('fase2');
     const fase3 = document.getElementById('fase3');
@@ -1280,6 +1314,7 @@
       fase1.classList.remove('ativa');
       fase3.classList.remove('ativa');
       fase2.classList.add('ativa');
+      if (formSlider) formSlider.style.transform = 'translateX(-33.333%)';
       progressFill.style.width = '66%';
       progressText.innerHTML = 'Etapa <strong>2</strong> de 3';
       progressStage.textContent = 'Equipamentos';
@@ -1293,6 +1328,7 @@
       fase2.classList.remove('ativa');
       fase3.classList.remove('ativa');
       fase1.classList.add('ativa');
+      if (formSlider) formSlider.style.transform = 'translateX(0)';
       progressFill.style.width = '33%';
       progressText.innerHTML = 'Etapa <strong>1</strong> de 3';
       progressStage.textContent = 'Dados pessoais';
@@ -1348,6 +1384,7 @@
       fase1.classList.remove('ativa');
       fase2.classList.remove('ativa');
       fase3.classList.add('ativa');
+      if (formSlider) formSlider.style.transform = 'translateX(-66.666%)';
       
       // Limpa a assinatura anterior para garantir
       clearSignature();
