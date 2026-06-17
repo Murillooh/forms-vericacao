@@ -2013,9 +2013,23 @@
             btnFoto.style.display = 'block';
           })
           .catch(function(err) {
-            console.log("Erro ao acessar câmera: ", err);
-            placeholder.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e57369" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span style="font-size: 9px; color: var(--error); margin-top: 4px; text-align: center;">Sem Câmera</span>';
-            btnFoto.style.display = 'none';
+            console.log("Erro ao acessar câmera com facingMode, tentando genérico...", err);
+            // Fallback para câmera genérica caso a restrição de câmera frontal falhe
+            navigator.mediaDevices.getUserMedia({ video: true })
+              .then(function(stream) {
+                webcamStream = stream;
+                video.srcObject = stream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                btnFoto.style.display = 'block';
+              })
+              .catch(function(errGen) {
+                console.log("Erro ao acessar câmera genérica: ", errGen);
+                placeholder.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e57369" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+                                        '<span style="font-size: 9px; color: var(--error); margin-top: 4px; text-align: center;">Sem Câmera</span>' +
+                                        '<span style="font-size: 8px; color: var(--text-muted); margin-top: 2px; text-align: center; max-width: 90%; word-break: break-all;">' + errGen.name + ': ' + errGen.message + '</span>';
+                btnFoto.style.display = 'none';
+              });
           });
       } else {
         placeholder.innerHTML = '<span style="font-size: 9px;">Não suportado</span>';
