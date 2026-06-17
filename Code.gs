@@ -232,7 +232,10 @@ function gerarPDF(dados) {
     }
   }
   
-  return file.getUrl();
+  return {
+    url: file.getUrl(),
+    blob: blob
+  };
 }
 
 /**
@@ -399,8 +402,11 @@ function processarCadastro(dados) {
     
     // Gera o recibo PDF e obtém o link do arquivo
     var pdfUrl = "";
+    var pdfBlob = null;
     try {
-      pdfUrl = gerarPDF(dados);
+      var resultadoPdf = gerarPDF(dados);
+      pdfUrl = resultadoPdf.url;
+      pdfBlob = resultadoPdf.blob;
     } catch (ePdf) {
       Logger.log("Erro ao gerar PDF: " + ePdf.toString());
     }
@@ -461,23 +467,21 @@ function processarCadastro(dados) {
     // Insere os dados
     sheet.appendRow(novaLinha);
     
-    // Envio automático do termo por e-mail se o PDF foi gerado
-    if (pdfUrl) {
+    // Envio automático do termo por e-mail usando GmailApp se o PDF foi gerado
+    if (pdfBlob) {
       try {
-        var fileId = pdfUrl.match(/[-\w]{25,}/);
-        if (fileId) {
-          var fileBlob = DriveApp.getFileById(fileId[0]).getBlob();
-          MailApp.sendEmail({
-            to: dados.email.trim(),
-            subject: "Recibo de Atribuição de Ativos - " + dados.nome.trim(),
-            body: "Olá " + dados.nome.trim() + ",\n\n" +
-                  "Confirmamos a recepção e o registro dos seus equipamentos periféricos no inventário da empresa.\n\n" +
-                  "Anexo a este e-mail está o PDF do seu Recibo de Atribuição de Ativos / Termo de Responsabilidade assinado digitalmente.\n\n" +
-                  "Atenciosamente,\n" +
-                  "TI · Locagora Periféricos",
-            attachments: [fileBlob]
-          });
-        }
+        GmailApp.sendEmail(
+          dados.email.trim(),
+          "Recibo de Atribuição de Ativos - " + dados.nome.trim(),
+          "Olá " + dados.nome.trim() + ",\n\n" +
+          "Confirmamos a recepção e o registro dos seus equipamentos periféricos no inventário da empresa.\n\n" +
+          "Anexo a este e-mail está o PDF do seu Recibo de Atribuição de Ativos / Termo de Responsabilidade assinado digitalmente.\n\n" +
+          "Atenciosamente,\n" +
+          "TI · Locagora Periféricos",
+          {
+            attachments: [pdfBlob]
+          }
+        );
       } catch (eEmail) {
         Logger.log("Erro ao enviar e-mail automático: " + eEmail.toString());
       }
