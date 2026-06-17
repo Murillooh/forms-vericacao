@@ -183,8 +183,18 @@ function gerarPDF(dados) {
   var folder = obterOuCriarPasta();
   var file = folder.createFile(blob);
   
-  // Define permissão para qualquer pessoa com o link visualizar
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  // Tenta alterar a permissão para qualquer pessoa com o link.
+  // Se as políticas de segurança corporativas do domínio bloquearem, ignora o erro para garantir que a URL seja gerada e salva.
+  try {
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (eShare) {
+    try {
+      // Tenta compartilhar apenas dentro da organização (Locagora) como fallback
+      file.setSharing(DriveApp.Access.DOMAIN, DriveApp.Permission.VIEW);
+    } catch (eDomain) {
+      Logger.log("Aviso: Falha ao definir permissão de compartilhamento. O arquivo permanecerá privado. Detalhes: " + eDomain.toString());
+    }
+  }
   
   return file.getUrl();
 }
