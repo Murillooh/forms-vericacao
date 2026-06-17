@@ -27,9 +27,10 @@
     body {
       margin: 0;
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #030305;
+      background: #010103;
       color: var(--text);
       min-height: 100vh;
+      min-height: 100dvh;
       line-height: 1.45;
       overflow-x: hidden;
       position: relative;
@@ -42,15 +43,15 @@
       left: -5%;
       width: 110%;
       height: 110%;
-      background: #030305;
+      background: #010103;
       background-image: 
-        radial-gradient(circle 800px at var(--mouse-x, 25%) var(--mouse-y, 50%), rgba(223, 178, 71, 0.12), transparent 70%),
+        radial-gradient(circle 800px at var(--mouse-x, 25%) var(--mouse-y, 50%), rgba(223, 178, 71, 0.06), transparent 70%),
         url('https://raw.githubusercontent.com/Murillooh/forms-vericacao/main/premium_nebula_bg.png');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       z-index: -1;
-      opacity: 0.95;
+      opacity: 0.25;
       pointer-events: none;
       animation: bgPan 50s infinite alternate ease-in-out;
       transform-origin: center;
@@ -73,6 +74,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       width: 100%;
       padding: 40px 24px;
       position: relative;
@@ -84,18 +86,18 @@
       width: 100%;
       max-width: 960px;
       min-height: 580px;
-      background: rgba(18, 18, 24, 0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(8, 8, 12, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
     }
 
     .sidebar {
       width: 38%;
-      background: linear-gradient(135deg, rgba(223, 178, 71, 0.15) 0%, rgba(10, 10, 15, 0.9) 100%);
+      background: linear-gradient(135deg, rgba(223, 178, 71, 0.08) 0%, rgba(5, 5, 8, 0.95) 100%);
       padding: 40px;
       display: flex;
       flex-direction: column;
@@ -539,9 +541,13 @@
     @media (max-width: 800px) {
       body {
         padding: 8px;
+        padding-top: env(safe-area-inset-top, 8px);
+        padding-bottom: env(safe-area-inset-bottom, 8px);
+        padding-left: env(safe-area-inset-left, 8px);
+        padding-right: env(safe-area-inset-right, 8px);
       }
       .container {
-        padding: 8px;
+        padding: 4px;
         min-height: auto;
       }
       .card-layout {
@@ -558,7 +564,7 @@
       }
       .main-form {
         width: 100%;
-        padding: 28px 20px;
+        padding: 24px 16px;
       }
       .eyebrow {
         margin-bottom: 4px;
@@ -571,6 +577,25 @@
       }
       .footer-note {
         margin-top: 16px;
+      }
+      input, select {
+        font-size: 16px; /* Evita zoom automático no iOS Safari */
+        padding: 12px 14px;
+      }
+      .btn-row {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .btn-row button {
+        width: 100%;
+        padding: 14px;
+      }
+      .btn-secondary {
+        order: 2; /* Coloca o botão de voltar embaixo no mobile */
+      }
+      .btn-primary {
+        order: 1; /* Coloca o botão principal no topo no mobile */
       }
     }
   </style>
