@@ -132,19 +132,16 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      overflow: hidden;
     }
 
     #formCadastro {
       width: 100%;
-      overflow: hidden;
     }
 
-    .form-slider {
-      display: flex;
-      width: 300%;
-      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      align-items: flex-start;
+    .form-stages-wrapper {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
     }
 
     .eyebrow {
@@ -513,31 +510,63 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .fase {
-      display: block;
-      width: 33.3333%;
-      flex-shrink: 0;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.6s ease, visibility 0.6s ease;
+    /* ─── Transição entre etapas ─────────────────────────────────────── */
+    .form-stages-wrapper {
       position: relative;
-    }
-    .fase.ativa {
-      opacity: 1;
-      visibility: visible;
+      width: 100%;
+      overflow: hidden;
     }
 
-    .fase:not(:first-child)::before {
-      content: '';
+    .fase {
+      width: 100%;
+      will-change: transform, opacity;
+    }
+
+    /* Estado ativo: fase visível em repouso */
+    .fase.ativa {
+      position: relative;
+    }
+
+    /* Estado inativo: absolutamente posicionada, oculta */
+    .fase.saindo,
+    .fase.entrando {
       position: absolute;
-      left: 0;
       top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, transparent, var(--gold-bright), var(--gold), transparent);
-      box-shadow: 0 0 12px rgba(223, 178, 71, 0.6), 0 0 4px rgba(223, 178, 71, 0.3);
-      opacity: 0.8;
+      left: 0;
       pointer-events: none;
+    }
+
+    /* Saída: some rápido — ease-in agressivo */
+    .fase.saindo-esq {
+      animation: sair-esq 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+    .fase.saindo-dir {
+      animation: sair-dir 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    /* Entrada: aparece com spring elegante — ease-out suave */
+    .fase.entrando-dir {
+      animation: entrar-dir 0.46s cubic-bezier(0, 0, 0.2, 1) 0.05s both;
+    }
+    .fase.entrando-esq {
+      animation: entrar-esq 0.46s cubic-bezier(0, 0, 0.2, 1) 0.05s both;
+    }
+
+    @keyframes sair-esq {
+      from { opacity: 1; transform: translateX(0) scale(1); }
+      to   { opacity: 0; transform: translateX(-48px) scale(0.97); }
+    }
+    @keyframes sair-dir {
+      from { opacity: 1; transform: translateX(0) scale(1); }
+      to   { opacity: 0; transform: translateX(48px) scale(0.97); }
+    }
+    @keyframes entrar-dir {
+      from { opacity: 0; transform: translateX(56px) scale(0.98); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes entrar-esq {
+      from { opacity: 0; transform: translateX(-56px) scale(0.98); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
     }
 
     .footer-note {
@@ -946,7 +975,7 @@
       <!-- Painel Direito: Formulário Ativo -->
       <div class="main-form">
         <form id="formCadastro" novalidate>
-          <div class="form-slider" id="formSlider">
+          <div class="form-stages-wrapper" id="formStagesWrapper">
             <div class="fase ativa" id="fase1">
           <div class="fase-intro">
             <h2>Quem é você</h2>
@@ -1201,7 +1230,6 @@
     const WEB_APP_URL = "https://script.google.com/a/macros/locgrupo.com.br/s/AKfycbxgT9_tpYhefprb5oHcCoCNPKMncR3r4dKcBA7kT9_plLjyZFJZohj5n_7R3CRDsNWK4w/exec";
     const isExternal = window.location.hostname !== 'script.google.com' && !window.location.hostname.endsWith('.googleusercontent.com');
     const form = document.getElementById('formCadastro');
-    const formSlider = document.getElementById('formSlider');
     const fase1 = document.getElementById('fase1');
     const fase2 = document.getElementById('fase2');
     const fase3 = document.getElementById('fase3');
@@ -1288,6 +1316,62 @@
       return true;
     }
 
+    /* ─── Engine de transição premium ───────────────────────────────── */
+    let transitionLock = false;
+
+    function transicionarFase(faseAtual, novaFase, direcao) {
+      if (transitionLock) return;
+      transitionLock = true;
+
+      const wrapper = document.getElementById('formStagesWrapper');
+      if (!wrapper || faseAtual === novaFase) {
+        transitionLock = false;
+        return;
+      }
+
+      // — Classes de animação baseadas na direção —
+      const classeSaida  = direcao === 'avancar' ? 'saindo-esq' : 'saindo-dir';
+      const classeEntrada = direcao === 'avancar' ? 'entrando-dir' : 'entrando-esq';
+
+      // — Fixar altura atual para evitar salto —
+      wrapper.style.height = wrapper.offsetHeight + 'px';
+
+      // — Preparar nova fase (invisível, posição absoluta) antes de animar —
+      novaFase.classList.add('entrando');
+      novaFase.classList.add(classeEntrada);
+
+      // — Iniciar saída da fase atual —
+      faseAtual.classList.add('saindo');
+      faseAtual.classList.add(classeSaida);
+      faseAtual.classList.remove('ativa');
+
+      // — Ativar nova fase (passa para `relative`, entra no fluxo) —
+      novaFase.classList.add('ativa');
+      novaFase.classList.remove('entrando');
+
+      // — Animar altura suavemente para a da nova fase —
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          var novAltura = novaFase.offsetHeight;
+          wrapper.style.transition = 'height 0.42s cubic-bezier(0, 0, 0.2, 1)';
+          wrapper.style.height = novAltura + 'px';
+        });
+      });
+
+      // — Limpeza ao finalizar (480ms = duração máxima da animação + margem) —
+      var DURACAO = 510;
+      setTimeout(function() {
+        // Remover classes de animação da fase que saiu
+        faseAtual.classList.remove('saindo', classeSaida);
+        // Remover classes de entrada e liberar nova fase
+        novaFase.classList.remove(classeEntrada);
+        // Liberar altura fixa para o formulário ser responsivo novamente
+        wrapper.style.height = '';
+        wrapper.style.transition = '';
+        transitionLock = false;
+      }, DURACAO);
+    }
+
     function irParaEtapa2(skipValidation) {
       if (skipValidation !== true) {
         const nome = document.getElementById('nome').value.trim();
@@ -1311,10 +1395,9 @@
       }
 
       limparMensagem();
-      fase1.classList.remove('ativa');
-      fase3.classList.remove('ativa');
-      fase2.classList.add('ativa');
-      if (formSlider) formSlider.style.transform = 'translateX(-33.333%)';
+      const faseAtual = fase1.classList.contains('ativa') ? fase1 : fase3;
+      transicionarFase(faseAtual, fase2, faseAtual === fase1 ? 'avancar' : 'voltar');
+      
       progressFill.style.width = '66%';
       progressText.innerHTML = 'Etapa <strong>2</strong> de 3';
       progressStage.textContent = 'Equipamentos';
@@ -1325,10 +1408,9 @@
       if (manterMensagem !== true) {
         limparMensagem();
       }
-      fase2.classList.remove('ativa');
-      fase3.classList.remove('ativa');
-      fase1.classList.add('ativa');
-      if (formSlider) formSlider.style.transform = 'translateX(0)';
+      const faseAtual = fase2.classList.contains('ativa') ? fase2 : fase3;
+      transicionarFase(faseAtual, fase1, 'voltar');
+      
       progressFill.style.width = '33%';
       progressText.innerHTML = 'Etapa <strong>1</strong> de 3';
       progressStage.textContent = 'Dados pessoais';
@@ -1381,10 +1463,8 @@
         reviewAcessoriosSection.style.display = 'none';
       }
 
-      fase1.classList.remove('ativa');
-      fase2.classList.remove('ativa');
-      fase3.classList.add('ativa');
-      if (formSlider) formSlider.style.transform = 'translateX(-66.666%)';
+      const faseAtual = fase2;
+      transicionarFase(faseAtual, fase3, 'avancar');
       
       // Limpa a assinatura anterior para garantir
       clearSignature();
