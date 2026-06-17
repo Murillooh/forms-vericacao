@@ -621,6 +621,109 @@
         order: 1; /* Coloca o botão principal no topo no mobile */
       }
     }
+
+    /* Estilos de Acessórios Checkboxes */
+    .accessories-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    
+    @media (max-width: 480px) {
+      .accessories-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+    }
+    
+    .accessory-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 12px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    
+    .accessory-card:hover {
+      border-color: rgba(223, 178, 71, 0.4);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .accessory-card input[type="checkbox"] {
+      display: none;
+    }
+    
+    .checkbox-custom {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      display: inline-block;
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    
+    .accessory-card input[type="checkbox"]:checked + .checkbox-custom {
+      background: var(--gold-bright);
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 8px rgba(223, 178, 71, 0.5);
+    }
+    
+    .accessory-card input[type="checkbox"]:checked + .checkbox-custom::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid #09090b;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    
+    .accessory-label {
+      font-size: 13.5px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    .accessory-card input[type="checkbox"]:checked ~ .accessory-label {
+      color: var(--gold-bright);
+    }
+
+    /* Estilos de Assinatura Canvas */
+    .signature-container {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      position: relative;
+      width: 100%;
+      height: 150px;
+      overflow: hidden;
+      touch-action: none;
+      transition: border-color 0.3s ease;
+      margin-top: 8px;
+    }
+    
+    .signature-container:focus-within,
+    .signature-container:hover {
+      border-color: var(--gold-bright);
+      box-shadow: 0 0 12px rgba(223, 178, 71, 0.15);
+    }
+    
+    #signaturePad {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
   </style>
   <script>
     // Mock do google.script.run para desenvolvimento local
@@ -647,6 +750,16 @@
                           ]
                         });
                       }, 500);
+                    },
+                    obterDadosUsuarioLogado: function () {
+                      console.log("Mock: Buscando dados SSO do usuário...");
+                      setTimeout(function () {
+                        successHandler({
+                          sucesso: true,
+                          email: "colaborador.teste@locgrupo.com.br",
+                          nome: "Colaborador Teste"
+                        });
+                      }, 400);
                     },
                     processarCadastro: function (dados) {
                       console.log("Mock: Processando cadastro de periféricos...", dados);
@@ -794,6 +907,38 @@
             </div>
           </div>
 
+          <div class="section-divider">
+            <div class="icon-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a449" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <span>Acessórios adicionais</span>
+          </div>
+
+          <div class="field">
+            <div class="accessories-grid">
+              <label class="accessory-card">
+                <input type="checkbox" name="acessorios" value="Mouse sem fio">
+                <span class="checkbox-custom"></span>
+                <span class="accessory-label">Mouse sem Fio</span>
+              </label>
+              <label class="accessory-card">
+                <input type="checkbox" name="acessorios" value="Teclado externo">
+                <span class="checkbox-custom"></span>
+                <span class="accessory-label">Teclado Externo</span>
+              </label>
+              <label class="accessory-card">
+                <input type="checkbox" name="acessorios" value="Headset com microfone">
+                <span class="checkbox-custom"></span>
+                <span class="accessory-label">Headset</span>
+              </label>
+              <label class="accessory-card">
+                <input type="checkbox" name="acessorios" value="Adaptador de vídeo">
+                <span class="checkbox-custom"></span>
+                <span class="accessory-label">Adaptador de Vídeo</span>
+              </label>
+            </div>
+          </div>
+
           <div class="btn-row">
             <button type="button" class="btn-secondary" id="btnVoltar">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
@@ -863,6 +1008,29 @@
                 <span class="review-label">IMEI Celular</span>
                 <span class="review-value" id="revImei"></span>
               </div>
+            </div>
+          </div>
+
+          <div class="review-section" id="reviewAcessoriosSection" style="display: none;">
+            <div class="review-section-header">
+              <span>Acessórios Adicionais</span>
+              <button type="button" class="btn-edit-link" onclick="irParaEtapa2(true)">Editar</button>
+            </div>
+            <div class="review-grid" id="revAcessoriosContainer">
+              <!-- Preenchido via JS -->
+            </div>
+          </div>
+
+          <div class="review-section">
+            <div class="review-section-header">
+              <span>Assinatura Digital do Termo</span>
+              <button type="button" class="btn-edit-link" id="btnClearSignature">Limpar</button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 8px;">
+              Assine com o mouse ou o dedo dentro da caixa neon abaixo:
+            </p>
+            <div class="signature-container">
+              <canvas id="signaturePad" width="500" height="150"></canvas>
             </div>
           </div>
 
@@ -949,6 +1117,33 @@
       msgBox.innerHTML = '';
     }
 
+    // Validador matemático de CPF
+    function validarCPF(cpf) {
+      const cpfLimpo = cpf.replace(/\D/g, '');
+      if (cpfLimpo.length !== 11) return false;
+      if (/^(\d)\1{10}$/.test(cpfLimpo)) return false;
+      
+      let soma = 0;
+      let resto;
+      
+      for (let i = 1; i <= 9; i++) {
+        soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+      }
+      resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
+      
+      soma = 0;
+      for (let i = 1; i <= 10; i++) {
+        soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
+      }
+      resto = (soma * 10) % 11;
+      if (resto === 10 || resto === 11) resto = 0;
+      if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+      
+      return true;
+    }
+
     function irParaEtapa2(skipValidation) {
       if (skipValidation !== true) {
         const nome = document.getElementById('nome').value.trim();
@@ -961,8 +1156,8 @@
           mostrarMensagem('Preencha todos os campos antes de avançar.', 'erro');
           return;
         }
-        if (cpf.replace(/\D/g, '').length !== 11) {
-          mostrarMensagem('Digite um CPF válido com 11 dígitos.', 'erro');
+        if (!validarCPF(cpf)) {
+          mostrarMensagem('Digite um CPF válido e no formato correto.', 'erro');
           return;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -1022,9 +1217,31 @@
       document.getElementById('revCelular').textContent = modeloCelular;
       document.getElementById('revImei').textContent = imeiCelular;
 
+      // Popula acessórios selecionados na tela de revisão
+      const checkboxes = document.querySelectorAll('input[name="acessorios"]:checked');
+      const acessoriosContainer = document.getElementById('revAcessoriosContainer');
+      const reviewAcessoriosSection = document.getElementById('reviewAcessoriosSection');
+      
+      acessoriosContainer.innerHTML = '';
+      if (checkboxes.length > 0) {
+        reviewAcessoriosSection.style.display = 'block';
+        checkboxes.forEach(function(cb) {
+          const item = document.createElement('div');
+          item.className = 'review-item';
+          item.innerHTML = '<span class="review-label">Acessório Extra</span><span class="review-value">• ' + cb.value + '</span>';
+          acessoriosContainer.appendChild(item);
+        });
+      } else {
+        reviewAcessoriosSection.style.display = 'none';
+      }
+
       fase1.classList.remove('ativa');
       fase2.classList.remove('ativa');
       fase3.classList.add('ativa');
+      
+      // Limpa a assinatura anterior para garantir
+      clearSignature();
+      
       progressFill.style.width = '100%';
       progressText.innerHTML = 'Etapa <strong>3</strong> de 3';
       progressStage.textContent = 'Revisão dos dados';
@@ -1035,6 +1252,61 @@
     btnVoltar.addEventListener('click', function() { voltarParaEtapa1(false); });
     btnAvancarRevisao.addEventListener('click', irParaEtapa3);
     btnVoltarFase2.addEventListener('click', function() { irParaEtapa2(true); });
+
+    // Código da Assinatura Digital (Canvas HTML5)
+    const canvas = document.getElementById('signaturePad');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('pointerdown', startDrawing);
+    canvas.addEventListener('pointermove', draw);
+    canvas.addEventListener('pointerup', stopDrawing);
+    canvas.addEventListener('pointerout', stopDrawing);
+
+    document.getElementById('btnClearSignature').addEventListener('click', clearSignature);
+
+    function startDrawing(e) {
+      drawing = true;
+      ctx.beginPath();
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      ctx.moveTo(x, y);
+      
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#ffd97d'; // Linha dourada
+      ctx.shadowBlur = 1;
+      ctx.shadowColor = '#ffd97d';
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      // Previne rolagem da tela em mobile ao assinar
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      drawing = false;
+      ctx.shadowBlur = 0;
+    }
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function isSignatureEmpty() {
+      const blank = document.createElement('canvas');
+      blank.width = canvas.width;
+      blank.height = canvas.height;
+      return canvas.toDataURL() === blank.toDataURL();
+    }
 
     function popularEquipamentos(opcoes) {
       // Limpa as opções existentes (exceto a primeira)
@@ -1071,12 +1343,37 @@
           .then(popularEquipamentos)
           .catch(function (erro) {
             console.log("Aviso: Falha ao carregar opções via API, usando fallback local. Detalhes: ", erro);
-            // Fallback usando opções padrão
             const fallbackOpcoes = {
               notebooks: ["Notebook Lenovo preto", "Notebook Lenovo Prata"],
               celulares: ["Moto G24", "Poco C65", "Redmi 13C"]
             };
             popularEquipamentos(fallbackOpcoes);
+          });
+      }
+    }
+
+    function carregarDadosUsuarioSSO() {
+      // Pula SSO em desenvolvimento local (usa mock)
+      if (!isExternal && typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (usuario) {
+            if (usuario && usuario.sucesso) {
+              if (usuario.nome) document.getElementById('nome').value = usuario.nome;
+              if (usuario.email) document.getElementById('email').value = usuario.email;
+            }
+          })
+          .obterDadosUsuarioLogado();
+      } else {
+        fetch(WEB_APP_URL + "?action=getUserData")
+          .then(function (res) { return res.json(); })
+          .then(function (usuario) {
+            if (usuario && usuario.sucesso) {
+              if (usuario.nome) document.getElementById('nome').value = usuario.nome;
+              if (usuario.email) document.getElementById('email').value = usuario.email;
+            }
+          })
+          .catch(function (erro) {
+            console.log("Aviso: Falha ao carregar dados do SSO. Detalhes:", erro);
           });
       }
     }
@@ -1090,6 +1387,9 @@
       if (resposta.sucesso) {
         mostrarMensagem(resposta.mensagem, 'sucesso');
         form.reset();
+        // Reseta também os checkboxes
+        document.querySelectorAll('input[name="acessorios"]').forEach(cb => cb.checked = false);
+        clearSignature();
         voltarParaEtapa1(true);
         setTimeout(limparMensagem, 5000);
       } else {
@@ -1109,6 +1409,18 @@
       e.preventDefault();
       limparMensagem();
 
+      // Confere se o usuário assinou o termo
+      if (isSignatureEmpty()) {
+        mostrarMensagem('É obrigatório assinar o termo na caixa de assinatura digital antes de enviar.', 'erro');
+        return;
+      }
+
+      // Coleta acessórios marcados
+      const acessoriosSelecionados = [];
+      document.querySelectorAll('input[name="acessorios"]:checked').forEach(function(cb) {
+        acessoriosSelecionados.push(cb.value);
+      });
+
       const dados = {
         nome: document.getElementById('nome').value.trim(),
         cpf: document.getElementById('cpf').value.trim(),
@@ -1118,7 +1430,9 @@
         modeloNotebook: selectModeloNotebook.value,
         patrimonioNotebook: document.getElementById('patrimonioNotebook').value.trim(),
         modeloCelular: selectModeloCelular.value,
-        imeiCelular: imeiInput.value.trim()
+        imeiCelular: imeiInput.value.trim(),
+        acessorios: acessoriosSelecionados,
+        assinatura: canvas.toDataURL('image/png') // Converte a assinatura para base64
       };
 
       if (!dados.nome || !dados.cpf || !dados.email || !dados.cargo || !dados.unidade ||
@@ -1126,8 +1440,8 @@
         mostrarMensagem('Preencha todos os campos do formulário.', 'erro');
         return;
       }
-      if (dados.cpf.replace(/\D/g, '').length !== 11) {
-        mostrarMensagem('O CPF deve conter exatamente 11 dígitos.', 'erro');
+      if (!validarCPF(dados.cpf)) {
+        mostrarMensagem('O CPF fornecido é inválido.', 'erro');
         return;
       }
       if (dados.imeiCelular.length !== 15) {
@@ -1162,6 +1476,7 @@
     });
 
     carregarOpcoes();
+    carregarDadosUsuarioSSO();
 
     document.addEventListener('mousemove', function (e) {
       const x = (e.clientX / window.innerWidth) * 100;

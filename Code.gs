@@ -16,6 +16,13 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // Se a requisição for para obter os dados do usuário logado (SSO)
+  if (e && e.parameter && e.parameter.action === "getUserData") {
+    var dadosUsuario = obterDadosUsuarioLogado();
+    return ContentService.createTextOutput(JSON.stringify(dadosUsuario))
+        .setMimeType(ContentService.MimeType.JSON);
+  }
+
   var cacheBuster = new Date().getTime();
   var url = "https://raw.githubusercontent.com/Murillooh/forms-vericacao/main/index.html?cb=" + cacheBuster;
   var response = UrlFetchApp.fetch(url);
@@ -127,20 +134,45 @@ function getOpcoesEquipamentos() {
 function gerarPDF(dados) {
   var dataFormatada = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   
+  var acessoriosHtml = "";
+  if (dados.acessorios) {
+    var listaAcessorios = Array.isArray(dados.acessorios) ? dados.acessorios : dados.acessorios.toString().split(",");
+    var listaLimpa = listaAcessorios.map(function(item) { return item.trim(); }).filter(function(item) { return item !== ""; });
+    if (listaLimpa.length > 0) {
+      acessoriosHtml = "<div class='section-title'>Acessórios Adicionais</div>" +
+                       "<div class='info-grid'>";
+      listaLimpa.forEach(function(acess) {
+        acessoriosHtml += "<div class='info-row'><div class='info-label'>• " + acess + "</div><div class='info-value'>Entregue e atribuído</div></div>";
+      });
+      acessoriosHtml += "</div>";
+    }
+  }
+
+  var assinaturaHtml = "";
+  if (dados.assinatura) {
+    assinaturaHtml = "<div class='section-title'>Termo de Responsabilidade & Assinatura</div>" +
+                     "<p style='font-size: 11px; color: #4a5568; margin-bottom: 20px;'>Declaro ter recebido os equipamentos descritos neste termo em perfeitas condições de uso, assumindo a responsabilidade pela guarda, conservação e devolução dos mesmos ao término do vínculo de trabalho.</p>" +
+                     "<div style='text-align: center; margin-top: 20px; border-top: 1px dashed #cbd5e0; padding-top: 10px;'>" +
+                       "<img src='" + dados.assinatura + "' style='max-height: 70px; max-width: 260px; display: block; margin: 0 auto 5px;' /><br/>" +
+                       "<span style='font-size: 12px; font-weight: bold; color: #2d3748;'>" + dados.nome + "</span><br/>" +
+                       "<span style='font-size: 10px; color: #718096;'>CPF: " + formatarCPF(dados.cpf) + "</span>" +
+                     "</div>";
+  }
+
   var htmlContent = 
     "<!DOCTYPE html><html><head><meta charset='utf-8'>" +
     "<style>" +
-      "body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2d3748; line-height: 1.6; margin: 0; padding: 40px; background-color: #f7fafc; }" +
-      ".container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid #c9a449; }" +
-      ".header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; }" +
-      ".header h1 { font-size: 24px; color: #1a202c; margin: 0 0 8px; font-weight: 700; }" +
-      ".header p { font-size: 13px; color: #718096; margin: 0; }" +
-      ".section-title { font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: #c9a449; font-weight: 700; margin: 25px 0 12px; border-bottom: 1px solid #edf2f7; padding-bottom: 6px; }" +
-      ".info-grid { display: table; width: 100%; margin-bottom: 20px; }" +
+      "body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2d3748; line-height: 1.5; margin: 0; padding: 20px; background-color: #f7fafc; }" +
+      ".container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid #c9a449; }" +
+      ".header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }" +
+      ".header h1 { font-size: 22px; color: #1a202c; margin: 0 0 6px; font-weight: 700; }" +
+      ".header p { font-size: 12px; color: #718096; margin: 0; }" +
+      ".section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #c9a449; font-weight: 700; margin: 20px 0 10px; border-bottom: 1px solid #edf2f7; padding-bottom: 4px; }" +
+      ".info-grid { display: table; width: 100%; margin-bottom: 15px; }" +
       ".info-row { display: table-row; }" +
-      ".info-label { display: table-cell; font-weight: bold; width: 35%; padding: 8px 0; color: #4a5568; font-size: 14px; border-bottom: 1px solid #edf2f7; }" +
-      ".info-value { display: table-cell; padding: 8px 0; color: #2d3748; font-size: 14px; border-bottom: 1px solid #edf2f7; }" +
-      ".footer { text-align: center; margin-top: 40px; font-size: 11px; color: #a0aec0; border-top: 1px solid #e2e8f0; padding-top: 20px; }" +
+      ".info-label { display: table-cell; font-weight: bold; width: 35%; padding: 6px 0; color: #4a5568; font-size: 13px; border-bottom: 1px solid #edf2f7; }" +
+      ".info-value { display: table-cell; padding: 6px 0; color: #2d3748; font-size: 13px; border-bottom: 1px solid #edf2f7; }" +
+      ".footer { text-align: center; margin-top: 30px; font-size: 10px; color: #a0aec0; border-top: 1px solid #e2e8f0; padding-top: 15px; }" +
     "</style>" +
     "</head><body>" +
       "<div class='container'>" +
@@ -169,6 +201,10 @@ function gerarPDF(dados) {
           "<div class='info-row'><div class='info-label'>Modelo do Celular:</div><div class='info-value'>" + dados.modeloCelular + "</div></div>" +
           "<div class='info-row'><div class='info-label'>IMEI do Celular:</div><div class='info-value'>" + dados.imeiCelular + "</div></div>" +
         "</div>" +
+        
+        acessoriosHtml +
+        
+        assinaturaHtml +
         
         "<div class='footer'>" +
           "<p>Documento de controle interno registrado em " + dataFormatada + "</p>" +
@@ -250,6 +286,7 @@ function processarCadastro(dados) {
         "Patrimônio do Notebook", 
         "Modelo do Celular", 
         "IMEI do Celular",
+        "Acessórios",
         "Link do PDF de Recibo"
       ];
       
@@ -265,19 +302,27 @@ function processarCadastro(dados) {
         sheet.getRange(1, 3).setValue("CPF");
       }
       
+      // Recarrega headers e confere a coluna Acessórios
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var hasAcessorios = headers.indexOf("Acessórios") !== -1;
+      if (!hasAcessorios) {
+        // Insere a coluna Acessórios antes da coluna de PDF (que costuma ser a última)
+        var lastCol = sheet.getLastColumn();
+        sheet.insertColumnBefore(lastCol);
+        sheet.getRange(1, lastCol).setValue("Acessórios");
+      }
+      
       // Garante que tem a coluna de Recibo PDF no final
-      if (sheet.getLastColumn() < 11) {
-        var headersAtualizados = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-        if (headersAtualizados.indexOf("Link do PDF de Recibo") === -1) {
-          sheet.getRange(1, sheet.getLastColumn() + 1).setValue("Link do PDF de Recibo");
-        }
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (headers.indexOf("Link do PDF de Recibo") === -1) {
+        sheet.getRange(1, sheet.getLastColumn() + 1).setValue("Link do PDF de Recibo");
       }
     }
 
     // Aplica a formatação do cabeçalho (Fundo Azul e Letras Douradas)
     var cabecalhoRange = sheet.getRange(1, 1, 1, sheet.getLastColumn());
     cabecalhoRange.setFontWeight("bold");
-    cabecalhoRange.setBackground("#0f4c81"); // Azul Corporativo (Classic Blue)
+    cabecalhoRange.setBackground("#0f4c81"); // Azul Corporativo
     cabecalhoRange.setFontColor("#dfb247"); // Letras Douradas
     cabecalhoRange.setHorizontalAlignment("center");
     
@@ -297,12 +342,11 @@ function processarCadastro(dados) {
       };
     }
     
-    // Validação de CPF no servidor
-    var cpfLimpo = dados.cpf.replace(/\D/g, '');
-    if (cpfLimpo.length !== 11) {
+    // Validação matemática de CPF no servidor
+    if (!validarCPF(dados.cpf)) {
       return {
         sucesso: false,
-        mensagem: "O CPF deve possuir exatamente 11 dígitos numéricos."
+        mensagem: "O CPF fornecido é inválido matematicamente."
       };
     }
     
@@ -324,6 +368,35 @@ function processarCadastro(dados) {
       };
     }
     
+    // Prevenção de duplicidades por Patrimônio de Notebook ou IMEI de Celular
+    var patrimonioLimpo = dados.patrimonioNotebook.trim().toLowerCase();
+    if (sheet.getLastRow() > 1) {
+      var headersVerif = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var idxPatrimonio = headersVerif.indexOf("Patrimônio do Notebook");
+      var idxImei = headersVerif.indexOf("IMEI do Celular");
+      var valuesVerif = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+      
+      for (var i = 0; i < valuesVerif.length; i++) {
+        var row = valuesVerif[i];
+        if (idxPatrimonio !== -1 && row[idxPatrimonio]) {
+          if (row[idxPatrimonio].toString().trim().toLowerCase() === patrimonioLimpo) {
+            return {
+              sucesso: false,
+              mensagem: "Erro: O Notebook com o Patrimônio '" + dados.patrimonioNotebook + "' já está cadastrado no sistema."
+            };
+          }
+        }
+        if (idxImei !== -1 && row[idxImei]) {
+          if (row[idxImei].toString().replace(/\D/g, '') === imeiLimpo) {
+            return {
+              sucesso: false,
+              mensagem: "Erro: O Celular com o IMEI '" + dados.imeiCelular + "' já está cadastrado no sistema."
+            };
+          }
+        }
+      }
+    }
+    
     // Gera o recibo PDF e obtém o link do arquivo
     var pdfUrl = "";
     try {
@@ -332,47 +405,108 @@ function processarCadastro(dados) {
       Logger.log("Erro ao gerar PDF: " + ePdf.toString());
     }
     
-    // Insere o registro de cadastro com timestamp
-    sheet.appendRow([
-      new Date(),
-      dados.nome.trim(),
-      formatarCPF(dados.cpf),
-      dados.email.trim(),
-      dados.cargo.trim(),
-      dados.unidade.trim(),
-      dados.modeloNotebook,
-      dados.patrimonioNotebook.trim(),
-      dados.modeloCelular,
-      imeiLimpo,
-      pdfUrl
-    ]);
+    // Recarrega os headers definitivos para mapeamento dinâmico de inserção
+    var headersFinais = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var novaLinha = [];
+    
+    for (var k = 0; k < headersFinais.length; k++) {
+      var headerName = headersFinais[k];
+      switch (headerName) {
+        case "Data/Hora de Registro":
+          novaLinha.push(new Date());
+          break;
+        case "Nome Completo":
+          novaLinha.push(dados.nome.trim());
+          break;
+        case "CPF":
+          novaLinha.push(formatarCPF(dados.cpf));
+          break;
+        case "E-mail Corporativo":
+          novaLinha.push(dados.email.trim());
+          break;
+        case "Cargo":
+          novaLinha.push(dados.cargo.trim());
+          break;
+        case "Unidade":
+          novaLinha.push(dados.unidade.trim());
+          break;
+        case "Modelo do Notebook":
+          novaLinha.push(dados.modeloNotebook);
+          break;
+        case "Patrimônio do Notebook":
+          novaLinha.push(dados.patrimonioNotebook.trim());
+          break;
+        case "Modelo do Celular":
+          novaLinha.push(dados.modeloCelular);
+          break;
+        case "IMEI do Celular":
+          novaLinha.push(imeiLimpo);
+          break;
+        case "Acessórios":
+          var acessString = "";
+          if (dados.acessorios) {
+            acessString = Array.isArray(dados.acessorios) ? dados.acessorios.join(", ") : dados.acessorios.toString();
+          }
+          novaLinha.push(acessString);
+          break;
+        case "Link do PDF de Recibo":
+          novaLinha.push(pdfUrl);
+          break;
+        default:
+          novaLinha.push("");
+          break;
+      }
+    }
+    
+    // Insere os dados
+    sheet.appendRow(novaLinha);
+    
+    // Envio automático do termo por e-mail se o PDF foi gerado
+    if (pdfUrl) {
+      try {
+        var fileId = pdfUrl.match(/[-\w]{25,}/);
+        if (fileId) {
+          var fileBlob = DriveApp.getFileById(fileId[0]).getBlob();
+          MailApp.sendEmail({
+            to: dados.email.trim(),
+            subject: "Recibo de Atribuição de Ativos - " + dados.nome.trim(),
+            body: "Olá " + dados.nome.trim() + ",\n\n" +
+                  "Confirmamos a recepção e o registro dos seus equipamentos periféricos no inventário da empresa.\n\n" +
+                  "Anexo a este e-mail está o PDF do seu Recibo de Atribuição de Ativos / Termo de Responsabilidade assinado digitalmente.\n\n" +
+                  "Atenciosamente,\n" +
+                  "TI · Locagora Periféricos",
+            attachments: [fileBlob]
+          });
+        }
+      } catch (eEmail) {
+        Logger.log("Erro ao enviar e-mail automático: " + eEmail.toString());
+      }
+    }
     
     // Aplica a formatação das linhas de dados (Fundo Preto e Letras Douradas)
     if (sheet.getLastRow() > 1) {
       var dataRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn());
-      dataRange.setBackground("#111111"); // Fundo Preto (Suave/Elegante)
-      dataRange.setFontColor("#ffd97d"); // Letras Douradas Brilhantes
+      dataRange.setBackground("#111111"); // Fundo Preto
+      dataRange.setFontColor("#ffd97d"); // Letras Douradas
       dataRange.setHorizontalAlignment("left");
       
-      // Centraliza coluna de Data/Hora, CPF e link do PDF
-      var dataHoraRange = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1);
-      dataHoraRange.setHorizontalAlignment("center");
-      
-      var cpfCellRange = sheet.getRange(2, 3, sheet.getLastRow() - 1, 1);
-      cpfCellRange.setHorizontalAlignment("center");
-      
-      var linkPdfRange = sheet.getRange(2, 11, sheet.getLastRow() - 1, 1);
-      linkPdfRange.setHorizontalAlignment("center");
+      // Centraliza colunas específicas para alinhamento profissional
+      for (var colIdx = 0; colIdx < headersFinais.length; colIdx++) {
+        var hName = headersFinais[colIdx];
+        if (hName === "Data/Hora de Registro" || hName === "CPF" || hName === "Link do PDF de Recibo" || hName === "IMEI do Celular") {
+          sheet.getRange(2, colIdx + 1, sheet.getLastRow() - 1, 1).setHorizontalAlignment("center");
+        }
+      }
     }
     
-    // Auto-ajusta as colunas após inserção para legibilidade
+    // Auto-ajusta as colunas
     try {
-      sheet.autoResizeColumns(1, 11);
+      sheet.autoResizeColumns(1, sheet.getLastColumn());
     } catch(e) {}
     
     return {
       sucesso: true,
-      mensagem: "Cadastro de periféricos efetuado e registrado com sucesso!"
+      mensagem: "Cadastro de periféricos efetuado e termo enviado por e-mail!"
     };
     
   } catch (erro) {
@@ -392,4 +526,64 @@ function formatarCPF(cpf) {
     return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   }
   return cpf;
+}
+
+/**
+ * Valida matematicamente um número de CPF.
+ */
+function validarCPF(cpf) {
+  var cpfLimpo = cpf.replace(/\D/g, '');
+  if (cpfLimpo.length !== 11) return false;
+  
+  // Impede CPFs conhecidos de dígitos repetidos
+  if (/^(\d)\1{10}$/.test(cpfLimpo)) return false;
+  
+  var soma = 0;
+  var resto;
+  
+  for (var i = 1; i <= 9; i++) {
+    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (11 - i);
+  }
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.substring(9, 10))) return false;
+  
+  soma = 0;
+  for (var i = 1; i <= 10; i++) {
+    soma += parseInt(cpfLimpo.substring(i - 1, i)) * (12 - i);
+  }
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpfLimpo.substring(10, 11))) return false;
+  
+  return true;
+}
+
+/**
+ * Retorna os dados prováveis do usuário logado (SSO) com base na sessão ativa do domínio.
+ */
+function obterDadosUsuarioLogado() {
+  try {
+    var email = Session.getActiveUser().getEmail();
+    var nome = "";
+    if (email) {
+      var username = email.split('@')[0];
+      // Substitui pontos e hífens por espaço e capitaliza cada palavra
+      var partes = username.split(/[._-]/);
+      nome = partes.map(function(parte) {
+        if (!parte) return "";
+        return parte.charAt(0).toUpperCase() + parte.slice(1).toLowerCase();
+      }).filter(Boolean).join(' ');
+    }
+    return {
+      sucesso: true,
+      email: email || "",
+      nome: nome || ""
+    };
+  } catch (e) {
+    return {
+      sucesso: false,
+      mensagem: "Falha na sessão do Workspace (SSO): " + e.toString()
+    };
+  }
 }
