@@ -755,6 +755,37 @@
         box-shadow: 0 0 6px currentColor;
       }
     }
+
+    /* Estrela Cadente */
+    .shooting-star {
+      position: absolute;
+      height: 2px;
+      width: 100px;
+      background: linear-gradient(to right, rgba(255, 255, 255, 1) 0%, rgba(223, 178, 71, 0.4) 50%, rgba(223, 178, 71, 0) 100%);
+      filter: drop-shadow(0 0 6px var(--gold-bright));
+      opacity: 0;
+      pointer-events: none;
+      transform-origin: left center;
+      animation: shoot var(--duration, 1.5s) linear forwards;
+    }
+    
+    @keyframes shoot {
+      0% {
+        transform: translate(0, 0) rotate(-45deg) scaleX(0);
+        opacity: 0;
+      }
+      15% {
+        transform: translate(-80px, 80px) rotate(-45deg) scaleX(1);
+        opacity: 1;
+      }
+      85% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-700px, 700px) rotate(-45deg) scaleX(0);
+        opacity: 0;
+      }
+    }
   </style>
   <script>
     // Mock do google.script.run para desenvolvimento local
@@ -1538,9 +1569,43 @@
       }
     }
 
+    // Cria estrelas cadentes passando na diagonal em intervalos randômicos
+    function criarEstrelaCadente() {
+      const container = document.querySelector('.stars');
+      if (!container) return;
+      
+      const star = document.createElement('div');
+      star.className = 'shooting-star';
+      
+      // Posição inicial na parte superior direita
+      const startX = Math.random() * 60 + 40; // entre 40% e 100% da largura
+      const startY = Math.random() * 40; // entre 0% e 40% da altura
+      
+      star.style.left = `${startX}vw`;
+      star.style.top = `${startY}vh`;
+      
+      // Duração e velocidade do voo
+      const duration = Math.random() * 1.5 + 1.2; // de 1.2s a 2.7s
+      star.style.setProperty('--duration', `${duration}s`);
+      
+      // Escala visual
+      const scale = Math.random() * 0.7 + 0.6;
+      star.style.transform = `scale(${scale})`;
+      
+      container.appendChild(star);
+      
+      // Deleta o elemento após a conclusão da animação
+      setTimeout(() => {
+        star.remove();
+      }, duration * 1000);
+    }
+
     carregarOpcoes();
     carregarDadosUsuarioSSO();
     criarEstrelasPiscantes();
+    
+    // Dispara uma estrela cadente a cada 3 segundos
+    setInterval(criarEstrelaCadente, 3000);
 
     document.addEventListener('mousemove', function (e) {
       const x = (e.clientX / window.innerWidth) * 100;
