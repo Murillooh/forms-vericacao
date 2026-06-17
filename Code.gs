@@ -158,13 +158,32 @@ function gerarPDF(dados) {
 
   var assinaturaHtml = "";
   if (dados.assinatura) {
+    var termoTexto = "Declaro ter recebido os equipamentos descritos neste termo em perfeitas condições de uso, assumindo a responsabilidade pela guarda, conservação e devolução dos mesmos ao término do vínculo de trabalho.";
     assinaturaHtml = "<div class='section-title'>Termo de Responsabilidade & Assinatura</div>" +
-                     "<p style='font-size: 11px; color: #4a5568; margin-bottom: 20px;'>Declaro ter recebido os equipamentos descritos neste termo em perfeitas condições de uso, assumindo a responsabilidade pela guarda, conservação e devolução dos mesmos ao término do vínculo de trabalho.</p>" +
-                     "<div style='text-align: center; margin-top: 20px; border-top: 1px dashed #cbd5e0; padding-top: 10px;'>" +
-                       "<img src='" + dados.assinatura + "' style='max-height: 70px; max-width: 260px; display: block; margin: 0 auto 5px;' /><br/>" +
-                       "<span style='font-size: 12px; font-weight: bold; color: #2d3748;'>" + dados.nome + "</span><br/>" +
-                       "<span style='font-size: 10px; color: #718096;'>CPF: " + formatarCPF(dados.cpf) + "</span>" +
-                     "</div>";
+                     "<p style='font-size: 11px; color: #4a5568; margin-bottom: 20px;'>" + termoTexto + "</p>";
+                     
+    if (dados.foto) {
+      assinaturaHtml += 
+        "<div style='width: 100%; display: block; margin-top: 15px; border-top: 1px dashed #cbd5e0; padding-top: 15px;'>" +
+          "<div style='display: inline-block; width: 45%; vertical-align: top; text-align: center; border-right: 1px solid #edf2f7; padding-right: 15px;'>" +
+            "<div style='font-size: 11px; font-weight: bold; color: #4a5568; margin-bottom: 8px;'>Foto de Validação</div>" +
+            "<img src='" + dados.foto + "' style='max-height: 110px; max-width: 100%; border-radius: 6px; border: 1.5px solid #cbd5e0;' />" +
+          "</div>" +
+          "<div style='display: inline-block; width: 45%; vertical-align: top; text-align: center; padding-left: 15px;'>" +
+            "<div style='font-size: 11px; font-weight: bold; color: #4a5568; margin-bottom: 8px;'>Assinatura Digital</div>" +
+            "<img src='" + dados.assinatura + "' style='max-height: 60px; max-width: 100%;' /><br/>" +
+            "<span style='font-size: 11px; font-weight: bold; color: #2d3748;'>" + dados.nome + "</span><br/>" +
+            "<span style='font-size: 9px; color: #718096;'>CPF: " + formatarCPF(dados.cpf) + "</span>" +
+          "</div>" +
+        "</div>";
+    } else {
+      assinaturaHtml += 
+        "<div style='text-align: center; margin-top: 20px; border-top: 1px dashed #cbd5e0; padding-top: 10px;'>" +
+          "<img src='" + dados.assinatura + "' style='max-height: 70px; max-width: 260px; display: block; margin: 0 auto 5px;' /><br/>" +
+          "<span style='font-size: 12px; font-weight: bold; color: #2d3748;'>" + dados.nome + "</span><br/>" +
+          "<span style='font-size: 10px; color: #718096;'>CPF: " + formatarCPF(dados.cpf) + "</span>" +
+        "</div>";
+    }
   }
 
   var htmlContent = 
@@ -305,6 +324,7 @@ function processarCadastro(dados) {
         "Carregador Celular",
         "Acessórios",
         "Itens em Falta / Observações",
+        "Foto de Validação",
         "Link do PDF de Recibo"
       ];
       
@@ -366,6 +386,19 @@ function processarCadastro(dados) {
         } else {
           sheet.insertColumnBefore(sheet.getLastColumn() + 1);
           sheet.getRange(1, sheet.getLastColumn()).setValue("Itens em Falta / Observações");
+        }
+      }
+      
+      // Recarrega headers e confere a coluna "Foto de Validação"
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      if (headers.indexOf("Foto de Validação") === -1) {
+        var idxPdf = headers.indexOf("Link do PDF de Recibo");
+        if (idxPdf !== -1) {
+          sheet.insertColumnBefore(idxPdf + 1);
+          sheet.getRange(1, idxPdf + 1).setValue("Foto de Validação");
+        } else {
+          sheet.insertColumnBefore(sheet.getLastColumn());
+          sheet.getRange(1, sheet.getLastColumn() - 1).setValue("Foto de Validação");
         }
       }
       
@@ -454,6 +487,33 @@ function processarCadastro(dados) {
       }
     }
     
+    // Salva a foto de validação no Google Drive se houver
+    var fotoUrl = "";
+    if (dados.foto && dados.foto.indexOf("base64,") !== -1) {
+      try {
+        var base64Parts = dados.foto.split("base64,");
+        var mimeType = base64Parts[0].split(":")[1].split(";")[0];
+        var decodedData = Utilities.base64Decode(base64Parts[1]);
+        var fotoBlob = Utilities.newBlob(decodedData, mimeType, "Foto_Validacao_" + dados.nome.replace(/\s+/g, "_") + "_" + new Date().getTime() + ".jpg");
+        
+        var folder = obterOuCriarPasta();
+        var fotoFile = folder.createFile(fotoBlob);
+        
+        try {
+          fotoFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch (eShare) {
+          try {
+            fotoFile.setSharing(DriveApp.Access.DOMAIN, DriveApp.Permission.VIEW);
+          } catch (eDomain) {
+            Logger.log("Aviso: Falha ao definir permissão de compartilhamento da foto. Detalhes: " + eDomain.toString());
+          }
+        }
+        fotoUrl = fotoFile.getUrl();
+      } catch (eFoto) {
+        Logger.log("Erro ao salvar foto no Drive: " + eFoto.toString());
+      }
+    }
+
     // Gera o recibo PDF e obtém o link do arquivo
     var pdfUrl = "";
     var pdfBlob = null;
@@ -518,6 +578,9 @@ function processarCadastro(dados) {
         case "Itens em Falta / Observações":
           novaLinha.push(dados.itensFalta ? dados.itensFalta.trim() : "");
           break;
+        case "Foto de Validação":
+          novaLinha.push(fotoUrl);
+          break;
         case "Link do PDF de Recibo":
           novaLinha.push(pdfUrl);
           break;
@@ -560,7 +623,7 @@ function processarCadastro(dados) {
       // Centraliza colunas específicas para alinhamento profissional
       for (var colIdx = 0; colIdx < headersFinais.length; colIdx++) {
         var hName = headersFinais[colIdx];
-        if (hName === "Data/Hora de Registro" || hName === "CPF" || hName === "Link do PDF de Recibo" || hName === "IMEI do Celular") {
+        if (hName === "Data/Hora de Registro" || hName === "CPF" || hName === "Link do PDF de Recibo" || hName === "IMEI do Celular" || hName === "Foto de Validação") {
           sheet.getRange(2, colIdx + 1, sheet.getLastRow() - 1, 1).setHorizontalAlignment("center");
         }
       }
