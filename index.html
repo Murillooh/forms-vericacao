@@ -982,7 +982,8 @@
                         successHandler({
                           notebooks: [
                             "Notebook Lenovo preto",
-                            "Notebook Lenovo Prata"
+                            "Notebook Lenovo Prata",
+                            "Notebook HP"
                           ],
                           celulares: [
                             "Moto G24",
@@ -1814,7 +1815,7 @@
           .catch(function (erro) {
             console.log("Aviso: Falha ao carregar opções via API, usando fallback local. Detalhes: ", erro);
             const fallbackOpcoes = {
-              notebooks: ["Notebook Lenovo preto", "Notebook Lenovo Prata"],
+              notebooks: ["Notebook Lenovo preto", "Notebook Lenovo Prata", "Notebook HP"],
               celulares: ["Moto G24", "Poco C65", "Redmi 13C"]
             };
             popularEquipamentos(fallbackOpcoes);

@@ -115,7 +115,8 @@ function getOpcoesEquipamentos() {
   return {
     notebooks: [
       "Notebook Lenovo preto",
-      "Notebook Lenovo Prata"
+      "Notebook Lenovo Prata",
+      "Notebook HP"
     ],
     celulares: [
       "Moto G24",
