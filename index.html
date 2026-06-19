@@ -1571,7 +1571,7 @@
         mostrarMensagem('Preencha todos os campos de equipamentos antes de avançar.', 'erro');
         return;
       }
-      if (patrimonioNotebook.length !== 8) {
+      if (modeloNotebook !== 'N/A' && patrimonioNotebook.length !== 8) {
         mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
         return;
       }
@@ -1784,6 +1784,11 @@
       selectModeloNotebook.innerHTML = '<option value="">Selecione o modelo</option>';
       selectModeloCelular.innerHTML = '<option value="">Selecione o modelo</option>';
 
+      const optNA = document.createElement('option');
+      optNA.value = 'N/A';
+      optNA.textContent = 'N/A (Não possuo notebook)';
+      selectModeloNotebook.appendChild(optNA);
+
       opcoes.notebooks.forEach(function (modelo) {
         const opt = document.createElement('option');
         opt.value = modelo;
@@ -1935,7 +1940,7 @@
         mostrarMensagem('O CPF fornecido é inválido.', 'erro');
         return;
       }
-      if (dados.patrimonioNotebook.length !== 8) {
+      if (dados.modeloNotebook !== 'N/A' && dados.patrimonioNotebook.length !== 8) {
         mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
         return;
       }
@@ -2169,6 +2174,20 @@
         btnFoto.textContent = "Tirar Outra";
       };
       reader.readAsDataURL(file);
+    });
+
+    selectModeloNotebook.addEventListener('change', function() {
+      const patInput = document.getElementById('patrimonioNotebook');
+      if (this.value === 'N/A') {
+        patInput.value = 'N/A';
+        patInput.readOnly = true;
+        document.querySelector('input[name="notebookCarregador"][value="Não"]').checked = true;
+      } else {
+        if (patInput.value === 'N/A') {
+          patInput.value = '';
+        }
+        patInput.readOnly = false;
+      }
     });
 
     carregarOpcoes();

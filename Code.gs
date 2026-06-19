@@ -439,7 +439,7 @@ function processarCadastro(dados) {
     }
     
     // Validação de Patrimônio do Notebook (deve conter exatamente 8 caracteres)
-    if (dados.patrimonioNotebook.trim().length !== 8) {
+    if (dados.modeloNotebook !== 'N/A' && dados.patrimonioNotebook.trim().length !== 8) {
       return {
         sucesso: false,
         mensagem: "O patrimônio do notebook deve conter exatamente 8 caracteres."
@@ -466,7 +466,7 @@ function processarCadastro(dados) {
       for (var i = 0; i < valuesVerif.length; i++) {
         var row = valuesVerif[i];
         if (idxPatrimonio !== -1 && row[idxPatrimonio]) {
-          if (row[idxPatrimonio].toString().trim().toLowerCase() === patrimonioLimpo) {
+          if (dados.modeloNotebook !== 'N/A' && row[idxPatrimonio].toString().trim().toLowerCase() === patrimonioLimpo) {
             return {
               sucesso: false,
               mensagem: "Erro: O Notebook com o Patrimônio '" + dados.patrimonioNotebook + "' já está cadastrado no sistema."
