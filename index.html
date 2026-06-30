@@ -1575,7 +1575,7 @@
         mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
         return;
       }
-      if (imeiCelular.length !== 15) {
+      if (modeloCelular !== 'N/A' && imeiCelular.length !== 15) {
         mostrarMensagem('O IMEI deve conter exatamente 15 dígitos.', 'erro');
         return;
       }
@@ -1789,6 +1789,11 @@
       optNA.textContent = 'N/A (Não possuo notebook)';
       selectModeloNotebook.appendChild(optNA);
 
+      const optCelNA = document.createElement('option');
+      optCelNA.value = 'N/A';
+      optCelNA.textContent = 'N/A (Não possuo celular)';
+      selectModeloCelular.appendChild(optCelNA);
+
       opcoes.notebooks.forEach(function (modelo) {
         const opt = document.createElement('option');
         opt.value = modelo;
@@ -1944,7 +1949,7 @@
         mostrarMensagem('O patrimônio do notebook deve conter exatamente 8 caracteres.', 'erro');
         return;
       }
-      if (dados.imeiCelular.length !== 15) {
+      if (dados.modeloCelular !== 'N/A' && dados.imeiCelular.length !== 15) {
         mostrarMensagem('O IMEI deve conter exatamente 15 dígitos.', 'erro');
         return;
       }
@@ -2187,6 +2192,20 @@
           patInput.value = '';
         }
         patInput.readOnly = false;
+      }
+    });
+
+    selectModeloCelular.addEventListener('change', function() {
+      const imeiInput = document.getElementById('imeiCelular');
+      if (this.value === 'N/A') {
+        imeiInput.value = 'N/A';
+        imeiInput.readOnly = true;
+        document.querySelector('input[name="celularCarregador"][value="Não"]').checked = true;
+      } else {
+        if (imeiInput.value === 'N/A') {
+          imeiInput.value = '';
+        }
+        imeiInput.readOnly = false;
       }
     });
 

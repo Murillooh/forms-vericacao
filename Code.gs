@@ -448,11 +448,13 @@ function processarCadastro(dados) {
 
     // Validação de IMEI (deve conter exatamente 15 dígitos numéricos)
     var imeiLimpo = dados.imeiCelular.replace(/\D/g, '');
-    if (imeiLimpo.length !== 15) {
-      return {
-        sucesso: false,
-        mensagem: "O IMEI celular deve possuir exatamente 15 dígitos numéricos."
-      };
+    if (dados.modeloCelular !== 'N/A') {
+      if (imeiLimpo.length !== 15) {
+        return {
+          sucesso: false,
+          mensagem: "O IMEI celular deve possuir exatamente 15 dígitos numéricos."
+        };
+      }
     }
     
     // Prevenção de duplicidades por Patrimônio de Notebook ou IMEI de Celular
@@ -473,7 +475,7 @@ function processarCadastro(dados) {
             };
           }
         }
-        if (idxImei !== -1 && row[idxImei]) {
+        if (dados.modeloCelular !== 'N/A' && idxImei !== -1 && row[idxImei]) {
           if (row[idxImei].toString().replace(/\D/g, '') === imeiLimpo) {
             return {
               sucesso: false,
@@ -535,7 +537,7 @@ function processarCadastro(dados) {
           novaLinha.push(dados.modeloCelular);
           break;
         case "IMEI do Celular":
-          novaLinha.push(imeiLimpo);
+          novaLinha.push(dados.modeloCelular === 'N/A' ? 'N/A' : imeiLimpo);
           break;
         case "Carregador Celular":
           novaLinha.push(dados.celularCarregador || "Sim");
